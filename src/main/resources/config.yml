@@ -1,0 +1,83 @@
+# AdvancedPlayerList - main settings
+#
+# Placeholder syntax:
+#   %player_name%    -> PlaceholderAPI
+#   {players}        -> handler from handler.yml
+#   {playerlocation} -> built-in, scripted or API placeholder
+
+locale: en_US
+tablist-enabled: true
+
+# Global update interval in ticks (20 ticks = 1 second).
+task-interval: 20
+
+# Players in these worlds will not receive the custom tab list.
+worldBlacklist:
+  - NoTablistWorld
+  - IHateTablist
+
+skin:
+  # Needed only when a skin is loaded from a custom image URL.
+  mineskin-api-key: ''
+
+slot-length:
+  min-length: 0
+  max-length: 128
+  limiter: '...'
+
+offline-players:
+  enable: false
+  # Old entries are removed on startup. Units: d = days, h = hours.
+  purgetime: 30d
+
+script-engine:
+  # Values available in JavaScript conditions and custom placeholders.
+  bindings:
+    'yes': true
+    'no': false
+    'one': 1
+
+fake-player:
+  enable: true
+  default-placeholder:
+    statistic_deaths: 0
+    custom_placeholder: nothing
+    player_name: '{fakeplayer_name}'
+    player_displayname: '{fakeplayer_name}'
+    player_uuid: '{fakeplayer_uuid}'
+    player_listname: '{fakeplayer_name}'
+  server-list:
+    player-count: true
+    player-list: true
+
+# Scripted AdvancedPlayerList placeholders use braces, for example:
+#   {playerlocation}
+#   {fixEnum_%player_biome%}
+#   {reverse_Example text}
+#
+# Available JavaScript variables:
+#   player - current Bukkit player
+#   server - Bukkit server
+#   param  - text after the placeholder identifier
+custom-placeholders:
+  playerlocation: |-
+    var loc = player.getLocation();
+    loc.getWorld().getName() + ' ' + loc.getBlockX() + ', ' + loc.getBlockY() + ', ' + loc.getBlockZ();
+
+  fixEnum: |-
+    var value = param == null ? '' : param.replace(/_/g, ' ');
+    value.isEmpty() ? value : value.length() == 1 ? value.toUpperCase() : value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
+
+  reverse: |-
+    param == null ? '' : param.split('').reverse().join('')
+
+  isRich:
+    condition: '%vault_eco_balance% > 1000'
+    true: 'yes'
+    false: 'no'
+
+  isAwesome:
+    requireParams: true
+    condition: "param == 'Kioselll'"
+    true: 'param is awesome'
+    false: 'param is not awesome'

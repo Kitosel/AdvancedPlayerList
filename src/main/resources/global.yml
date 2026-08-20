@@ -1,0 +1,61 @@
+# Main tab-list layout.
+# Handler names from handler.yml use braces: {players}, {worldPlayers}, etc.
+# PlaceholderAPI always uses percent signs: %player_name%.
+
+size: 80
+defaultSkin: krep
+defaultPing: 1000
+defaultDisplay: ''
+
+columns:
+  - items:
+      - text: '&2&lSERVER INFO'
+        ping: 0
+      - ''
+      - text: '{serverInformation}'
+        amount: -1
+
+  - hideEmpty: true
+    items:
+      - text: '{dynamicSlots}'
+        amount: -1
+
+  - items:
+      - '&7&lPLAYERS'
+      - text: '{worldPlayers}'
+        amount: -1
+
+  - items:
+      - text: '&b&lYOUR INFO'
+        ping: 0
+      - ''
+      - text: '{playerInformation}'
+        amount: -1
+
+header:
+  refreshTicks: 10
+  # Every frame may have multiple simultaneous lines, a delay and a condition.
+  frames:
+    - lines:
+        - '&aWelcome to my server!'
+        - '&7Online players: &f%server_online%&7/&f%server_max_players%'
+    - lines:
+        - '&eWelcome to my server!'
+        - '&7World: &f%player_world%'
+    - lines:
+        - '&cWelcome to my server!'
+        - '&7Have a great time.'
+    - lines:
+        - '&6You are an &cOPERATOR'
+        - '&7Administrative tools are available.'
+      delay: 60
+      condition: '%player_is_op%'
+    - lines:
+        - '&dYou are a VIP on this server!'
+        - '&7Thank you for supporting us.'
+      condition: '%player_has_permission_server.vip% && !%player_is_op%'
+
+footer:
+  lines:
+    - '&dPlease donate to my server <3'
+    - '&7Store: &fstore.example.com'

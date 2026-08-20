@@ -1,0 +1,56 @@
+name: '${project.name}'
+version: '${project.version}'
+author: Kiosel
+main: pl.kiosel.playerlist.AdvancedPlayerList
+
+libraries:
+   - org.openjdk.nashorn:nashorn-core:15.6
+
+depend:
+- ProtocolLib
+softdepend:
+- PlaceholderAPI
+
+permissions:
+   advancedplayerlist.manage.plugin:
+      description: Allows you to manage the plugin
+      default: op
+      children:
+         advancedplayerlist.command.enable: true
+         advancedplayerlist.command.disable: true
+         advancedplayerlist.command.reload: true
+         advancedplayerlist.command.import: true
+         advancedplayerlist.command.placeholder: true
+         advancedplayerlist.command.check: true
+         advancedplayerlist.command.size: true
+   advancedplayerlist.manage.fakeplayer:
+      description: Allows you to manage fake players
+      default: op
+      children:
+         advancedplayerlist.command.create: true
+         advancedplayerlist.command.delete: true
+         advancedplayerlist.command.edit: true
+         advancedplayerlist.command.list: true
+
+   advancedplayerlist.command.enable:
+      default: op
+   advancedplayerlist.command.disable:
+      default: op
+   advancedplayerlist.command.reload:
+      default: op
+   advancedplayerlist.command.import:
+      default: op
+   advancedplayerlist.command.placeholder:
+      default: op
+   advancedplayerlist.command.check:
+      default: op
+   advancedplayerlist.command.size:
+      default: op
+   advancedplayerlist.command.create:
+      default: op
+   advancedplayerlist.command.delete:
+      default: op
+   advancedplayerlist.command.edit:
+      default: op
+   advancedplayerlist.command.list:
+      default: op

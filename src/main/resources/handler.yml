@@ -1,0 +1,118 @@
+# AdvancedPlayerList handlers
+#
+# A handler produces one or more tab-list slots and is inserted by its name:
+#   {players}, {worldPlayers}, {serverInformation}
+#
+# PlaceholderAPI uses its normal syntax:
+#   %player_name%, %player_ping%, %vault_eco_balance%
+# Add the "viewer_" prefix to evaluate a PAPI placeholder for the person
+# viewing the tab list, for example: %viewer_player_world%.
+#
+# Main handler types: TEXT, PLAYER_LIST, WORLD_LIST and COMPOUND.
+# Common options: text, skin, ping, condition, sorter, order, header,
+# hideEmpty, overflowFormat and refreshTicks.
+
+serverInformation:
+  type: COMPOUND
+  overflowFormat: '... and {overflow_count} more ...'
+  items:
+    serverInfo:
+      fixedSize: -1
+    worlds:
+      fixedSize: -1
+
+playerInformation:
+  type: COMPOUND
+  items:
+    playerInfo:
+      fixedSize: -1
+
+playerInfo:
+  type: TEXT
+  text:
+    - '&aLocation:'
+    - '&7 {playerlocation}'
+    - '&aBiome: &7{fixEnum_%player_biome%}'
+    - '&aTime: &7%player_world_time_24%'
+    - ''
+    - '&7Time played: &a%statistic_time_played%'
+    - '&7Money: &a%vault_eco_balance_fixed%$'
+  skin: '%player_name%'
+
+serverInfo:
+  type: TEXT
+  text:
+    - '&aDate: &7%server_time_dd/MM/yyyy%'
+    - '&aTPS: &7%server_tps_1%'
+    - '&aMemory: &7%server_ram_used%MB/%server_ram_max%MB'
+    - '&aOnline: &7%server_online%/%server_max_players%'
+    - '&aTab list: &7{tablist_performanceMS}ms'
+    - '&aUnique joins: &7%server_unique_joins%'
+    - '&aUptime: &7%server_uptime%'
+    - ''
+  alternateText:
+    - '&aDate: &7%server_time_dd/MM/yyyy%'
+    - '&aOnline: &7%server_online%/%server_max_players%'
+    - ''
+  condition: '%player_is_op%'
+  ping: 0
+  refreshTicks: 20
+  skin: jeb_
+
+players:
+  type: PLAYER_LIST
+  text: '%player_displayname% &7%player_ping%'
+  sorter: '%player_name%'
+  skin: '%player_uuid%'
+  ping: '%player_ping%'
+  header: '&e&lPLAYERS'
+  hideEmpty: true
+  order: ASCEND
+  overflowFormat: '... and {overflow_count} more ...'
+  grouping:
+    groupName: GLOBAL
+    priority: 0
+
+operators:
+  type: PLAYER_LIST
+  condition: '%player_is_op%'
+  text: '&c%player_displayname% &7%player_ping%'
+  sorter: '%player_name%'
+  skin: '%player_name%'
+  ping: '%player_ping%'
+  header: '&c&lOPERATORS'
+  hideEmpty: true
+  order: ASCEND
+  overflowFormat: '... and {overflow_count} more ...'
+  grouping:
+    groupName: GLOBAL
+    priority: 2
+
+worldPlayers:
+  type: PLAYER_LIST
+  condition: "'%viewer_player_world%' == '%player_world%'"
+  text: '%player_displayname% &7%player_ping%'
+  sorter: '%player_name%'
+  skin: '%player_uuid%'
+  ping: '%player_ping%'
+  order: ASCEND
+  overflowFormat: '... and {overflow_count} more ...'
+
+worlds:
+  type: WORLD_LIST
+  # These describe the world currently processed by AdvancedPlayerList.
+  text: '{world_name} &e{world_player_count}'
+  condition: '%viewer_player_has_permission_server.viewworld.{world_name}%'
+  sorter: '{world_name}'
+  header: '&e&lSERVER WORLDS'
+  hideEmpty: true
+  overflowFormat: '... and {overflow_count} more ...'
+
+dynamicSlots:
+  type: COMPOUND
+  overflowFormat: '... and {overflow_count} more ...'
+  items:
+    operators:
+      fixedSize: -1
+    players:
+      fixedSize: -1
