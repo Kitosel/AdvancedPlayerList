@@ -30,6 +30,23 @@ class PlaceholderManagerTest {
         assertFalse(PlaceholderManager.containsUnresolvedPlaceholder("{invalid placeholder}"));
     }
 
+    @Test
+    void accumulatesMissingPapiPlaceholdersUntilExplicitlyCleared() {
+        PlaceholderManager.clearMissingPlaceholders();
+        try {
+            PlaceholderManager.replace(
+                    "%missing_expansion_value% {missing_native}", new ExtraData());
+            PlaceholderManager.replace("a later resolved line", new ExtraData());
+
+            assertEquals(
+                    java.util.Collections.singleton("%missing_expansion_value%"),
+                    PlaceholderManager.getMissingPlaceholderAPIPlaceholders());
+            assertTrue(PlaceholderManager.missingPlaceholders.contains("{missing_native}"));
+        } finally {
+            PlaceholderManager.clearMissingPlaceholders();
+        }
+    }
+
 	@Test
 	void unresolvedConditionIsRejectedBeforeItReachesJavaScriptEngine() {
 		assertFalse(Evaluator.meetCriteria(null, ExtraData.DATA_PLAYER, null,

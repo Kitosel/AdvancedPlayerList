@@ -41,6 +41,9 @@ public class PlaceholderSubCommand extends RosaSubCommand {
 
 	@Override
 	public void run(CommandSender sender, String[] args) {
+		if (args.length == 0) {
+			sendUsage(sender);
+		}
 		if (args.length > 0) {
 			String message = String.join(" ", Arrays.copyOfRange(args, 0, args.length));
 			ExtraData data = (sender instanceof Player) ? new ExtraData().put(DATA_PLAYER, sender).put(DATA_VIEWER, sender) : new ExtraData();

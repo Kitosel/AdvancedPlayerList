@@ -113,8 +113,7 @@ public class ProtocolListener extends PacketAdapter {
         }
     }
 
-    private void handleLegacyPlayerInfo(PacketEvent event, PacketContainer packet,
-                                        Tablist tablist, List<PlayerInfoData> entries) {
+    private void handleLegacyPlayerInfo(PacketEvent event, PacketContainer packet, Tablist tablist, List<PlayerInfoData> entries) {
         EnumWrappers.PlayerInfoAction action = Protocol.readLegacyPlayerInfoAction(packet);
         if (action == EnumWrappers.PlayerInfoAction.ADD_PLAYER) {
             for (PlayerInfoData data : entries) {

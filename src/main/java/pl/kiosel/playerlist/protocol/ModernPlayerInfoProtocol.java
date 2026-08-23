@@ -6,7 +6,7 @@ import com.comphenix.protocol.reflect.StructureModifier;
 import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.PlayerInfoData;
 import org.bukkit.entity.Player;
-import pl.kiosel.playerlist.util.RuntimeCompatibility;
+import pl.kiosel.rosacore.version.Version;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,10 +63,10 @@ final class ModernPlayerInfoProtocol {
         actions.add(EnumWrappers.PlayerInfoAction.UPDATE_LATENCY);
         actions.add(EnumWrappers.PlayerInfoAction.UPDATE_DISPLAY_NAME);
 
-        if (RuntimeCompatibility.isMinecraftAtLeast(1, 21, 2)) {
+        if (Version.isServerVersionAtLeast(Version.V1_21_2)) {
             addOptionalAction(actions, "UPDATE_LIST_ORDER");
         }
-        if (RuntimeCompatibility.isMinecraftAtLeast(1, 21, 4)) {
+        if (Version.isServerVersionAtLeast(Version.V1_21_4)) {
             addOptionalAction(actions, "UPDATE_HAT");
         }
         return actions;

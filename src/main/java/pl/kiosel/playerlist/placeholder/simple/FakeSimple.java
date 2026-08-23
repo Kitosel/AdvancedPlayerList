@@ -20,18 +20,33 @@ public class FakeSimple implements SimplePlaceholder {
     
     @Override
     public String replace(String string, ExtraData data) {
+        if (string == null) {
+            return null;
+        }
+
         Object player = data.get(ExtraData.DATA_PLAYER);
         if (player instanceof FakePlayer) {
             FakePlayer dp = (FakePlayer) player;
             for (Map.Entry<String, String> entry : dp.placeholders().entrySet()) {
-                string = string.replace("{" + entry.getKey() + "}", color(entry.getValue()));
+                string = replaceToken(string, entry.getKey(), entry.getValue());
             }
             for (Map.Entry<String, String> entry : FakePlayer.GLOBAL_PLACEHOLDER.entrySet()) {
-                string = string.replace("{" + entry.getKey() + "}", color(entry.getValue()));
+                string = replaceToken(string, entry.getKey(), entry.getValue());
             }
             string = string.replace("{fakeplayer_name}", color(dp.getName())).replace("{fakeplayer_uuid}",
                     (dp.getUniqueId() == null) ? "" : dp.getUniqueId().toString());
         }
         return string;
+    }
+
+    @Override
+    public boolean repeatAfterParameterizedPlaceholders() {
+        return true;
+    }
+
+    private String replaceToken(String input, String key, String value) {
+        String replacement = color(value);
+        return input.replace("{" + key + "}", replacement)
+                .replace("%" + key + "%", replacement);
     }
 }

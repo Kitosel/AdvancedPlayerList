@@ -6,6 +6,9 @@ import pl.kiosel.playerlist.model.Evaluator;
 import pl.kiosel.rosacore.RosaLogger;
 
 import java.util.LinkedHashSet;
+import java.util.Collections;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,7 +19,6 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@SuppressWarnings("deprecation")
 public final class PlaceholderManager {
     private static final Set<SimplePlaceholder> SIMPLES = new LinkedHashSet<>();
     private static final List<ParameterizedPlaceholder> PARAMETERIZED = new CopyOnWriteArrayList<>();
@@ -123,9 +125,6 @@ public final class PlaceholderManager {
             return null;
         }
         int depth = REPLACE_DEPTH.get();
-        if (depth == 0) {
-            missingPlaceholders.clear();
-        }
         REPLACE_DEPTH.set(depth + 1);
         try {
             String result = replaceInternal(text, data == null ? new ExtraData() : data, quoted);
@@ -195,21 +194,36 @@ public final class PlaceholderManager {
                     text = replacement;
                 }
             } catch (Throwable throwable) {
-                RosaLogger logger = RosaLogger.getInstance();
-                if (logger != null) {
-                    logger.log(Level.WARNING, "Unable to resolve a placeholder", throwable);
-                } else {
-                    Evaluator.onceError(throwable);
-                }
+                RosaLogger.getInstance().log(Level.WARNING, "Unable to resolve a placeholder", throwable);
             }
         }
         return text;
     }
 
     public static Set<String> getRegisteredPlaceholderIdentifiers() {
-        if (AdvancedPlayerList.isPlaceholderAPI())
-            return PlaceholderAPI.getRegisteredIdentifiers();
-        return null;
+        if (!AdvancedPlayerList.isPlaceholderAPI()) {
+            return Collections.emptySet();
+        }
+        Set<String> identifiers = PlaceholderAPI.getRegisteredIdentifiers();
+        return identifiers == null
+                ? Collections.emptySet()
+                : Collections.unmodifiableSet(new TreeSet<>(identifiers));
+    }
+
+    public static SortedSet<String> getMissingPlaceholderAPIPlaceholders() {
+        SortedSet<String> result = new TreeSet<>();
+        for (String placeholder : missingPlaceholders) {
+            if (placeholder != null && placeholder.length() > 2
+                    && placeholder.charAt(0) == '%'
+                    && placeholder.charAt(placeholder.length() - 1) == '%') {
+                result.add(placeholder);
+            }
+        }
+        return Collections.unmodifiableSortedSet(result);
+    }
+
+    public static void clearMissingPlaceholders() {
+        missingPlaceholders.clear();
     }
 
     public static boolean containsUnresolvedPlaceholder(String text) {

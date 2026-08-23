@@ -5,7 +5,6 @@
 size: 80
 defaultSkin: krep
 defaultPing: 1000
-defaultDisplay: ''
 
 columns:
   - items:

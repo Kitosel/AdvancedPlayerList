@@ -69,49 +69,4 @@ public class LineData implements Externalizable {
         this.skin.writeExternal(out);
         out.writeBoolean(this.hideEmpty);
     }
-    
-    public static class Builder {
-        private String text;
-        private Integer ping;
-        private Skin skin;
-        
-        public Builder() {
-        }
-        
-        public Builder(String text) {
-            this.text = text;
-        }
-        
-        public Builder(String text, int ping) {
-            this(text);
-            this.ping = ping;
-        }
-        
-        public Builder(String text, int ping, Skin skin) {
-            this(text, ping);
-            this.skin = skin;
-        }
-        
-        public Builder text(String text) {
-            this.text = text;
-            return this;
-        }
-        
-        public Builder ping(int ping) {
-            this.ping = ping;
-            return this;
-        }
-        
-        public Builder skin(Skin skin) {
-            this.skin = skin;
-            return this;
-        }
-        
-        public LineData build() {
-            LineData data = new LineData(this.text);
-            data.setPing(this.ping);
-            data.setSkin(this.skin);
-            return data;
-        }
-    }
 }

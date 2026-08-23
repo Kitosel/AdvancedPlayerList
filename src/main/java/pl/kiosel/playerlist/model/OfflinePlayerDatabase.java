@@ -5,6 +5,7 @@ import org.bukkit.OfflinePlayer;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.rosacore.RosaLogger;
 import pl.kiosel.rosacore.utils.NumberUtils;
+import pl.kiosel.rosacore.utils.TimeUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,29 +40,13 @@ public final class OfflinePlayerDatabase {
                 throw new IllegalArgumentException("Invalid purge time: " + value);
             }
             long amount = NumberUtils.parseLongOrZero(matcher.group(1));
-            duration = Math.addExact(duration, Math.multiplyExact(amount, multiplier(matcher.group(2))));
+            duration = Math.addExact(duration, TimeUtils.convert(amount, matcher.group(2)));
             parsedUntil = matcher.end();
         }
         if (parsedUntil != normalized.length() || duration < 0L) {
             throw new IllegalArgumentException("Invalid purge time: " + value);
         }
         maxTimePurging = duration;
-    }
-
-    private static long multiplier(String unit) {
-        if ("d".equals(unit)) {
-            return 24L * 60L * 60L * 1000L;
-        }
-        if ("h".equals(unit)) {
-            return 60L * 60L * 1000L;
-        }
-        if ("m".equals(unit)) {
-            return 60L * 1000L;
-        }
-        if ("s".equals(unit)) {
-            return 1000L;
-        }
-        return 1L;
     }
 
     public void initialize() {

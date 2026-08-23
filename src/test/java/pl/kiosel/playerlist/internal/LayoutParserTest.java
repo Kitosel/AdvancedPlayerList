@@ -3,6 +3,7 @@ package pl.kiosel.playerlist.internal;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.Test;
 import pl.kiosel.playerlist.tablist.TablistDisplay;
+import pl.kiosel.playerlist.tablist.TablistLayout;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class LayoutParserTest {
@@ -92,5 +94,19 @@ class LayoutParserTest {
         assertEquals("PLAYER_LIST", handlers.getString("players.type"));
         assertEquals("PLAYER_LIST", handlers.getString("worldPlayers.type"));
         assertEquals("COMPOUND", handlers.getString("dynamicSlots.type"));
+    }
+
+    @Test
+    void bundledLayoutKeepsConfiguredHandlerMarkers() {
+        InputStream input = LayoutParserTest.class.getResourceAsStream("/global.yml");
+        assertNotNull(input);
+        YamlConfiguration configuration = YamlConfiguration.loadConfiguration(
+                new InputStreamReader(input, StandardCharsets.UTF_8));
+
+        TablistLayout layout = LayoutParser.parseLayout(configuration);
+
+        assertEquals("&2&lSERVER INFO", layout.getLine(0).getText());
+        assertEquals("{serverInformation}", layout.getLine(2).getText());
+        assertNull(layout.getDefaultDisplay());
     }
 }

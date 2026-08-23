@@ -4,11 +4,9 @@ import org.bukkit.command.CommandSender;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.config.Lang;
 import pl.kiosel.playerlist.placeholder.PlaceholderManager;
-import pl.kiosel.playerlist.util.Utils;
 import pl.kiosel.rosacore.command.RosaSubCommand;
-import pl.kiosel.rosacore.utils.ColorUtils;
 
-import java.util.Objects;
+import java.util.Set;
 
 public class CheckSubCommand extends RosaSubCommand {
 
@@ -39,19 +37,20 @@ public class CheckSubCommand extends RosaSubCommand {
 	@Override
 	public void run(CommandSender sender, String[] strings) {
 		if (!AdvancedPlayerList.isPlaceholderAPI()) {
-			sender.sendMessage("PlaceholderApi is not installed!");
+			getMessage().sendPrefixed(sender, Lang.REQUIRE_PLACEHOLDER);
 			return;
 		}
-		try {
-			int count = 0;
-			for (String identifier : Objects.requireNonNull(PlaceholderManager.getRegisteredPlaceholderIdentifiers())) {
-				count++;
-				sender.sendMessage(ColorUtils.color("&e * " + identifier));
-			}
-			getMessage().sendPrefixed(sender, Lang.CHECK_PLACEHOLDERS, "count", count);
-		} catch (Throwable t) {
-			getMessage().sendPrefixed(sender, Lang.REQUIRE_PLACEHOLDER);
-		}
-		getMessage().sendPrefixed(sender, Lang.MISSING_PLACEHOLDERS, "missing", String.join(", ", PlaceholderManager.missingPlaceholders));
+
+		Set<String> installed = PlaceholderManager.getRegisteredPlaceholderIdentifiers();
+		Set<String> missing = PlaceholderManager.getMissingPlaceholderAPIPlaceholders();
+		getMessage().sendPrefixed(sender, Lang.CHECK_PLACEHOLDERS,
+				"count", installed.size(),
+				"placeholders", format(installed));
+		getMessage().sendPrefixed(sender, Lang.MISSING_PLACEHOLDERS,
+				"missing", format(missing));
+	}
+
+	private String format(Set<String> placeholders) {
+		return placeholders.isEmpty() ? "-" : String.join(", ", placeholders);
 	}
 }

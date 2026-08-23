@@ -5,6 +5,8 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.rosacore.RosaLogger;
+import pl.kiosel.rosacore.scheduler.RosaScheduler;
+import pl.kiosel.rosacore.scheduler.RosaTask;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +26,7 @@ public final class Ticker implements Runnable {
 
     private static volatile int refreshTicks = 1;
     private static volatile AdvancedPlayerList plugin;
-    private static volatile BukkitTask tickerTask;
+    private static volatile RosaTask tickerTask;
     private static volatile ExecutorService asyncExecutor;
 
     private Ticker() {
@@ -37,11 +39,11 @@ public final class Ticker implements Runnable {
 
         Ticker.plugin = plugin;
         asyncExecutor = Executors.newSingleThreadExecutor(new WorkerThreadFactory());
-        tickerTask = Bukkit.getScheduler().runTaskTimer(plugin, new Ticker(), 1L, 1L);
+        tickerTask = plugin.getRosaScheduler().runGlobalTimer(new Ticker(), 1L, 1L);
     }
 
     public static synchronized void shutdown() {
-        BukkitTask task = tickerTask;
+        RosaTask task = tickerTask;
         tickerTask = null;
         if (task != null) {
             task.cancel();

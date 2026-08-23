@@ -60,7 +60,7 @@ public class InternalLayoutHandler extends TablistLayoutHandler {
         Grouping grouping = new Grouping();
         for (int i = 0; i < layout.getSize(); ++i) {
             LineData ld = layout.getLine(i);
-            if (layout.getDefaultDisplay() != null) {
+            if (layout.getDefaultDisplay() != null && ld.getText() == null) {
                 ld.setText(this.replace(viewer, layout.getDefaultDisplay()));
             }
             if (layout.getDefaultPing() != null) {

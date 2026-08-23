@@ -41,8 +41,8 @@ public class DeleteSubCommand extends RosaSubCommand {
 
 	@Override
 	public void run(CommandSender sender, String[] args) {
-		if (args.length == 0) {
-			sender.sendMessage(getUsage());
+		if (args.length == 0 || args.length > 2) {
+			sendUsage(sender);
 			return;
 		}
 

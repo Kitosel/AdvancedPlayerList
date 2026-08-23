@@ -5,8 +5,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import pl.kiosel.playerlist.placeholder.ExtraData;
 import pl.kiosel.playerlist.placeholder.PlaceholderManager;
-import pl.kiosel.playerlist.util.RuntimeCompatibility;
 import pl.kiosel.rosacore.RosaLogger;
+import pl.kiosel.rosacore.utils.ReflectionUtils;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -38,7 +38,7 @@ public final class Evaluator {
             return true;
         }
 
-        if (RuntimeCompatibility.getJavaVersion() <= 11) {
+        if (ReflectionUtils.JAVA_VERSION <= 11) {
             engine = findBundledEngine();
             if (engine != null) {
                 engineSource = "built-in " + engine.getFactory().getEngineName();

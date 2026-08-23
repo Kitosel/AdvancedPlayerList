@@ -1,22 +1,27 @@
+![apl title](https://cdn.modrinth.com/data/cached_images/670718ef7660f847908e3daec983b4de3c544c4b.png)
 # AdvancedPlayerList
 
-Advanced and highly configurable tab-list plugin for Bukkit, Spigot and Paper servers.
+Advanced and highly configurable tab-list plugin for Bukkit, Spigot and Paper (and its forks) servers.
 It is designed to work with both legacy and modern Minecraft server versions.
 
 ## Features
 
-- Custom tab-list layouts, columns, headers and footers
+- Custom tablist layouts, columns, headers and footers
+- All 80 slots are customizable
+- A per world layout
 - Animated and multiline text
 - Player, world and server-list handlers
 - Fake and offline player support
+- Dynamic Slots
+- Custom Placeholders using JavaScript
 - PlaceholderAPI integration
 - Public API for placeholders supplied by other plugins
-- Compatibility logic for legacy and modern server internals
+- Supports versions 1.8.8 through 26.1.2
 
 ## Requirements
 
-- **ProtocolLib** — required
-- **PlaceholderAPI** — optional (but highly recommended)
+- [ProtocolLib](https://www.spigotmc.org/resources/protocollib.1997/) — required
+- [PlaceholderAPI](https://modrinth.com/plugin/placeholderapi) — optional (but highly recommended)
 
 ## Installation
 

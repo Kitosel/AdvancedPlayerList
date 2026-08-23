@@ -46,6 +46,9 @@ fake-player:
     player_displayname: '{fakeplayer_name}'
     player_uuid: '{fakeplayer_uuid}'
     player_listname: '{fakeplayer_name}'
+    player_ping: 0
+    player_is_op: false
+    player_world: ''
   server-list:
     player-count: true
     player-list: true

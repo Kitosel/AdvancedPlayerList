@@ -1,4 +1,4 @@
-prefix: "&8[&dRosa&bPlayerList&8]"
+prefix: "&8[&dAdvanced&bPlayerList&8]"
 command:
   admin:
     tablist-enable: "&7Tablist has been &aenabled!"
@@ -6,7 +6,7 @@ command:
     tablist-already-enabled: "&7Tablist is already &aenabled."
     tablist-already-disabled: "&7Tablist is already &cdisabled."
     reload: "&7Configuration has been &6reloaded!"
-    check-placeholders: "&7Total &e%count% &7placeholder expansion installed"
+    check-placeholders: "&7Total &e%count% &7placeholder expansion installed: &e%placeholders%"
     missing-placeholders: "&7Missing placeholders: &c%missing%"
     require-placeholderapi: "&cRequires PlaceholderAPI!"
     offlineplayers-import: "&7Importing..."

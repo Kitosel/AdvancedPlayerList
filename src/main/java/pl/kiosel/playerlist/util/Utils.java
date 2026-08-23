@@ -12,11 +12,11 @@ public final class Utils {
 
     Utils() {}
 
-    public static void log(String msg) {
+    private static void log(String msg) {
         Bukkit.getServer().getConsoleSender().sendMessage(ColorUtils.color(msg));
     }
 
-    public static boolean isAvailable() {
+    private static boolean isAvailable() {
         try {
             return !net.md_5.bungee.api.ChatColor.class.isEnum();
         } catch (Throwable t) {

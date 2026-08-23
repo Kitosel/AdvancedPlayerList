@@ -64,6 +64,7 @@ public class SizeSubCommand extends RosaSubCommand {
 			} else {
 				getMessage().sendPrefixed(sender, Lang.INVALID_SIZE, "size", size);
 			}
+			return;
 		}
 		int size = 0;
 		for (Player player : Bukkit.getOnlinePlayers()) {

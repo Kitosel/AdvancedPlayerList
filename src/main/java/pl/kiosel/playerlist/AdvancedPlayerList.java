@@ -34,16 +34,18 @@ import pl.kiosel.playerlist.placeholder.simple.ColorizerSimple;
 import pl.kiosel.playerlist.placeholder.simple.FakeSimple;
 import pl.kiosel.playerlist.placeholder.simple.OverflowSimple;
 import pl.kiosel.playerlist.placeholder.simple.PlaceholderAPISimple;
+import pl.kiosel.playerlist.protocol.Protocol;
 import pl.kiosel.playerlist.protocol.ProtocolListener;
 import pl.kiosel.playerlist.model.skin.SkinToolkit;
 import pl.kiosel.playerlist.tablist.TablistDisplay;
 import pl.kiosel.playerlist.tablist.TablistLayout;
 import pl.kiosel.playerlist.tablist.TablistManager;
 import pl.kiosel.playerlist.util.FakePlayer;
-import pl.kiosel.playerlist.util.RuntimeCompatibility;
 import pl.kiosel.playerlist.util.Utils;
 import pl.kiosel.rosacore.RosaPlugin;
 import pl.kiosel.rosacore.config.RosaConfig;
+import pl.kiosel.rosacore.utils.ReflectionUtils;
+import pl.kiosel.rosacore.version.Version;
 
 import java.io.File;
 import java.io.InputStream;
@@ -64,9 +66,6 @@ public final class AdvancedPlayerList extends RosaPlugin {
     @Getter private RosaConfig configFile;
     @Getter private RosaConfig handlerFile;
     @Getter private RosaConfig globalFile;
-
-    private final String fakePlayersFile = "fakeplayers.bin";
-    private final String skinCacheFile = "skincache.tmp";
 
     private final Map<String, RosaConfig> worldConfigFiles = new LinkedHashMap<>();
     @Getter private final Map<World, TablistLayout> layouts = new HashMap<>();
@@ -109,9 +108,9 @@ public final class AdvancedPlayerList extends RosaPlugin {
         }
 
         log("&aCompatibility mode: &fMinecraft "
-                + RuntimeCompatibility.getMinecraftVersion()
-                + " &7(" + (RuntimeCompatibility.usesModernPlayerInfo() ? "modern" : "legacy") + ")"
-                + "&f, Java " + RuntimeCompatibility.getJavaVersion()
+                + Version.getServerVersion()
+                + " &7(" + (Protocol.usesModernPlayerInfo() ? "modern" : "legacy") + ")"
+                + "&f, Java " + ReflectionUtils.JAVA_VERSION
                 + "&f, scripts: " + Evaluator.getEngineSource());
 
         if (!checkDependencies()) {
@@ -148,7 +147,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
         loadSkinCache();
         applyConfiguration();
-        loadPlayerBank();
+        playerBank.loadPlayerBank();
 
         api = new AdvancedPlayerListAPI(this);
         registerListeners(api);
@@ -175,7 +174,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
         if (fullyStarted && playerBank != null) {
             saveSkinCache();
-            savePlayerBank();
+            playerBank.savePlayerBank();
         }
         fullyStarted = false;
 		tablistManager = null;
@@ -198,35 +197,24 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
     private void applyConfiguration() {
         this.tablistManager.setTablistEnabled(false);
-        configureRuntimeSettings();
-        configureScriptEnvironment();
-        configurePlaceholders();
-        configureLayouts();
-        tablistManager.setTablistEnabled(this.configFile.getBoolean("tablist-enabled"));
-    }
-
-    private void configureRuntimeSettings() {
+        PlaceholderManager.clearMissingPlaceholders();
         Ticker.setPeriodTicks(this.configFile.getInt("task-interval", 20));
         SkinToolkit.getDefaultToolkit().setMineSkinApiKey(this.configFile.getString("skin.mineskin-api-key", ""));
         loadOfflinePlayerSettings();
         loadFakePlayerDefaults(this.configFile.getConfigurationSection("fake-player.default-placeholder"));
-    }
 
-    private void configureScriptEnvironment() {
         Evaluator.clearBindings();
         Evaluator.putBindings("server", getServer());
         loadScriptBindings(this.configFile.getConfigurationSection("script-engine.bindings"));
-    }
 
-    private void configurePlaceholders() {
         PlaceholderManager.unregisterIf(this::isConfigurationPlaceholder);
         ComplexParser.parseAndRegister(rootSection(handlerFile));
         registerCustomPlaceholders(this.configFile.getConfigurationSection("custom-placeholders"));
-    }
 
-    private void configureLayouts() {
         loadGlobalLayout(rootSection(globalFile));
         loadWorldLayouts();
+
+        tablistManager.setTablistEnabled(this.configFile.getBoolean("tablist-enabled"));
     }
 
     private boolean checkDependencies() {
@@ -279,12 +267,19 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
     private void loadFakePlayerDefaults(ConfigurationSection defaults) {
         FakePlayer.GLOBAL_PLACEHOLDER.clear();
-        if (defaults == null)
-            return;
-
-        for (String key : defaults.getKeys(false)) {
-            FakePlayer.GLOBAL_PLACEHOLDER.put(key, Objects.toString(defaults.get(key), ""));
+        if (defaults != null) {
+            for (String key : defaults.getKeys(false)) {
+                FakePlayer.GLOBAL_PLACEHOLDER.put(key, Objects.toString(defaults.get(key), ""));
+            }
         }
+
+        FakePlayer.GLOBAL_PLACEHOLDER.putIfAbsent("player_name", "{fakeplayer_name}");
+        FakePlayer.GLOBAL_PLACEHOLDER.putIfAbsent("player_displayname", "{fakeplayer_name}");
+        FakePlayer.GLOBAL_PLACEHOLDER.putIfAbsent("player_listname", "{fakeplayer_name}");
+        FakePlayer.GLOBAL_PLACEHOLDER.putIfAbsent("player_uuid", "{fakeplayer_uuid}");
+        FakePlayer.GLOBAL_PLACEHOLDER.putIfAbsent("player_ping", "0");
+        FakePlayer.GLOBAL_PLACEHOLDER.putIfAbsent("player_is_op", "false");
+        FakePlayer.GLOBAL_PLACEHOLDER.putIfAbsent("player_world", "");
     }
 
     private void registerCustomPlaceholders(ConfigurationSection placeholders) {
@@ -391,14 +386,14 @@ public final class AdvancedPlayerList extends RosaPlugin {
     }
 
     private void loadSkinCache() {
-        File file = new File(getDataFolder(), skinCacheFile);
+        File file = new File(getDataFolder(), ConfigFile.SKIN_CACHE.getPath());
         if (!file.isFile())
             return;
 
         try (InputStream input = Files.newInputStream(file.toPath())) {
             SkinToolkit.getDefaultToolkit().loadCache(input);
         } catch (Throwable throwable) {
-            getRosaLogger().log(Level.WARNING, "Unable to load " + skinCacheFile, throwable);
+            getRosaLogger().log(Level.WARNING, "Unable to load " + ConfigFile.SKIN_CACHE.getPath(), throwable);
         }
     }
 
@@ -406,32 +401,11 @@ public final class AdvancedPlayerList extends RosaPlugin {
         if (!getDataFolder().isDirectory())
             return;
 
-        File file = new File(getDataFolder(), skinCacheFile);
+        File file = new File(getDataFolder(), ConfigFile.SKIN_CACHE.getPath());
         try (OutputStream output = Files.newOutputStream(file.toPath())) {
             SkinToolkit.getDefaultToolkit().saveCache(output);
         } catch (Throwable throwable) {
-            getRosaLogger().log(Level.WARNING, "Unable to save " + skinCacheFile, throwable);
-        }
-    }
-
-    private void loadPlayerBank() {
-        File file = new File(getDataFolder(), fakePlayersFile);
-        if (!file.isFile())
-            return;
-
-        try (InputStream input = Files.newInputStream(file.toPath())) {
-            playerBank.load(input);
-        } catch (Throwable throwable) {
-            getRosaLogger().log(Level.WARNING, "Unable to load " + fakePlayersFile, throwable);
-        }
-    }
-
-    private void savePlayerBank() {
-        File file = new File(getDataFolder(), fakePlayersFile);
-        try (OutputStream output = Files.newOutputStream(file.toPath())) {
-            playerBank.save(output);
-        } catch (Throwable throwable) {
-            getRosaLogger().log(Level.WARNING, "Unable to save " + fakePlayersFile, throwable);
+            getRosaLogger().log(Level.WARNING, "Unable to save " + ConfigFile.SKIN_CACHE.getPath(), throwable);
         }
     }
 }

@@ -36,23 +36,21 @@ public class CreateSubCommand extends RosaSubCommand {
 
 	@Override
 	public void run(CommandSender sender, String[] args) {
-		if (args.length == 0) {
-			sender.sendMessage(getUsage());
+		if (args.length == 0 || args.length > 2) {
+			sendUsage(sender);
 			return;
 		}
 
-		if (args.length > 0) {
-			String name = args[0];
-			if (name.length() > 16) {
-				getMessage().sendPrefixed(sender, Lang.MAX_CHARACTERS);
-				return;
-			}
-			if (plugin.getPlayerBank().getFakePlayer(name) != null) {
-				getMessage().sendPrefixed(sender, Lang.ALREADY_EXISTS, "name", name);
-				return;
-			}
-			plugin.getPlayerBank().createFakePlayer(name);
-			getMessage().sendPrefixed(sender, Lang.SPAWN);
+		String name = args[0];
+		if (name.length() > 16) {
+			getMessage().sendPrefixed(sender, Lang.MAX_CHARACTERS);
+			return;
 		}
+		if (plugin.getPlayerBank().getFakePlayer(name) != null) {
+			getMessage().sendPrefixed(sender, Lang.ALREADY_EXISTS, "name", name);
+			return;
+		}
+		plugin.getPlayerBank().createFakePlayer(name);
+		getMessage().sendPrefixed(sender, Lang.SPAWN);
 	}
 }

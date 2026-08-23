@@ -33,7 +33,7 @@ public class EditSubCommand extends RosaSubCommand {
 
 	@Override
 	public String getUsage() {
-		return "/fakeplayer edit <name> <addplaceholder/removeplaceholder> <placeholder> [value]";
+		return "/fakeplayer edit <name> <setplaceholder/removeplaceholder> <placeholder> [value]";
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public class EditSubCommand extends RosaSubCommand {
 		}
 
 		if (args.length > 1) {
-			if (args[1].equalsIgnoreCase("addplaceholder")) {
+			if (args[1].equalsIgnoreCase("setplaceholder")) {
 				if (args.length > 3) {
 					String text = args[2];
 					String value = joinArguments(args, 3);
@@ -78,6 +78,9 @@ public class EditSubCommand extends RosaSubCommand {
 
 	@Override
 	public List<String> tabComplete(CommandSender sender, String[] args) {
+		if (args.length == 0) {
+			sendUsage(sender);
+		}
 		if (args.length == 1) {
 			List<String> names = new ArrayList<>();
 			for (FakePlayer player : plugin.getPlayerBank().getFakePlayers()) {
@@ -86,7 +89,7 @@ public class EditSubCommand extends RosaSubCommand {
 			return CommandUtils.returnWith(args[0], names);
 		}
 		if (args.length == 2) {
-			return CommandUtils.returnWith(args[1], Arrays.asList("addplaceholder", "removeplaceholder"));
+			return CommandUtils.returnWith(args[1], Arrays.asList("setplaceholder", "removeplaceholder"));
 		}
 		if (args.length == 3 && "removeplaceholder".equalsIgnoreCase(args[1])) {
 			FakePlayer player = plugin.getPlayerBank().getFakePlayer(args[0]);

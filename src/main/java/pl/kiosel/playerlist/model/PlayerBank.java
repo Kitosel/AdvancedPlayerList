@@ -2,13 +2,11 @@ package pl.kiosel.playerlist.model;
 
 import org.bukkit.Bukkit;
 import pl.kiosel.playerlist.AdvancedPlayerList;
+import pl.kiosel.playerlist.config.ConfigFile;
 import pl.kiosel.playerlist.util.FakePlayer;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -16,14 +14,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
 
 public final class PlayerBank {
 
     private final AdvancedPlayerList plugin;
     private final Map<String, FakePlayer> fakePlayers = new ConcurrentHashMap<>();
+    private final String fakePlayersFile;
 
     public PlayerBank(AdvancedPlayerList plugin) {
         this.plugin = plugin;
+        this.fakePlayersFile = ConfigFile.FAKE_PLAYER.getPath();
     }
 
     public void clearFakePlayers() {
@@ -102,6 +103,27 @@ public final class PlayerBank {
             }
         }
         data.flush();
+    }
+
+    public void loadPlayerBank() {
+        File file = new File(plugin.getDataFolder(), fakePlayersFile);
+        if (!file.isFile())
+            return;
+
+        try (InputStream input = Files.newInputStream(file.toPath())) {
+            load(input);
+        } catch (Throwable throwable) {
+            plugin.getRosaLogger().log(Level.WARNING, "Unable to load " + fakePlayersFile, throwable);
+        }
+    }
+
+    public void savePlayerBank() {
+        File file = new File(plugin.getDataFolder(), fakePlayersFile);
+        try (OutputStream output = Files.newOutputStream(file.toPath())) {
+            save(output);
+        } catch (Throwable throwable) {
+            plugin.getRosaLogger().log(Level.WARNING, "Unable to save " + fakePlayersFile, throwable);
+        }
     }
 
     private String normalize(String name) {

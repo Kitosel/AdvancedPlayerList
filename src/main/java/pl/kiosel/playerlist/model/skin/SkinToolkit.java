@@ -6,11 +6,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONTokener;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.model.Ticker;
+import pl.kiosel.playerlist.placeholder.PlaceholderManager;
 import pl.kiosel.rosacore.RosaLogger;
 
 import java.io.BufferedInputStream;
@@ -35,12 +37,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 public class SkinToolkit {
 
     private static final int CONNECT_TIMEOUT_MILLIS = 5_000;
     private static final int READ_TIMEOUT_MILLIS = 10_000;
     private static final String USER_AGENT = "AdvancedPlayerList-Plugin";
+    private static final Pattern MINECRAFT_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
+    private static final UUID EMPTY_UUID = new UUID(0L, 0L);
 
     private static volatile SkinToolkit toolkit = new SkinToolkit();
 
@@ -79,14 +84,7 @@ public class SkinToolkit {
     }
 
     private byte[] readUrl(String address, String method) throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(address).openConnection();
-        connection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
-        connection.setReadTimeout(READ_TIMEOUT_MILLIS);
-        connection.setRequestProperty("User-Agent", USER_AGENT);
-        if (address.startsWith("https://api.mineskin.org/") && !mineSkinApiKey.isEmpty()) {
-            connection.setRequestProperty("Authorization", "Bearer " + mineSkinApiKey);
-        }
-        connection.setRequestMethod(method);
+        HttpURLConnection connection = getConnection(address, method);
 
         try {
             int responseCode = connection.getResponseCode();
@@ -113,6 +111,18 @@ public class SkinToolkit {
         } finally {
             connection.disconnect();
         }
+    }
+
+    private @NotNull HttpURLConnection getConnection(String address, String method) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) new URL(address).openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
+        connection.setReadTimeout(READ_TIMEOUT_MILLIS);
+        connection.setRequestProperty("User-Agent", USER_AGENT);
+        if (address.startsWith("https://api.mineskin.org/") && !mineSkinApiKey.isEmpty()) {
+            connection.setRequestProperty("Authorization", "Bearer " + mineSkinApiKey);
+        }
+        connection.setRequestMethod(method);
+        return connection;
     }
 
     private void logRequestFailure(String address, Throwable throwable) {
@@ -147,7 +157,11 @@ public class SkinToolkit {
     }
 
     public Skin getSkinFromName(String name) {
-        if (name == null || name.trim().isEmpty()) {
+        if (name == null) {
+            return null;
+        }
+        name = name.trim();
+        if (!MINECRAFT_NAME.matcher(name).matches()) {
             return null;
         }
 
@@ -215,7 +229,7 @@ public class SkinToolkit {
     }
 
     public Skin getSkinFromUniqueId(UUID uuid, Skin supplied, boolean checkPlayer) {
-        if (uuid == null || uuid.version() == 3) {
+        if (uuid == null || EMPTY_UUID.equals(uuid) || uuid.version() == 3) {
             return null;
         }
 
@@ -244,7 +258,11 @@ public class SkinToolkit {
     }
 
     public Skin getSkinPredicate(String value) {
-        if (value == null || value.isEmpty()) {
+        if (value == null) {
+            return null;
+        }
+        value = value.trim();
+        if (value.isEmpty() || PlaceholderManager.containsUnresolvedPlaceholder(value)) {
             return null;
         }
         if (value.length() <= 16) {

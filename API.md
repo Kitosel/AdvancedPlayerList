@@ -62,7 +62,7 @@ public final class VillagePlaceholder implements AdvancedPlaceholder {
 }
 ```
 
-Register it from `AdvancedVillages#onEnable()`:
+Register it from `onEnable()`:
 
 ```java
 AdvancedPlayerListAPI.get().register(this, new VillagePlaceholder());

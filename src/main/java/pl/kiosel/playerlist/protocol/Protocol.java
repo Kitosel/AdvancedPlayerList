@@ -10,8 +10,8 @@ import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
-import pl.kiosel.playerlist.util.RuntimeCompatibility;
 import pl.kiosel.playerlist.util.Utils;
+import pl.kiosel.rosacore.version.Version;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public final class Protocol {
     }
 
     public static boolean usesModernPlayerInfo() {
-        return RuntimeCompatibility.usesModernPlayerInfo();
+        return Version.isServerVersionAbove(Version.V1_19_2);
     }
 
     public static EnumWrappers.NativeGameMode convert(GameMode bukkit) {
@@ -66,8 +66,7 @@ public final class Protocol {
         sendPacket(target, packet);
     }
 
-    public static void infoBukkitPlayer(Player target, EnumWrappers.PlayerInfoAction action,
-                                        Collection<Player> players) {
+    public static void infoBukkitPlayer(Player target, EnumWrappers.PlayerInfoAction action, Collection<Player> players) {
         if (cannotSend(target, players)) {
             return;
         }
@@ -83,11 +82,9 @@ public final class Protocol {
         sendPlayerInfoUpdate(target, action, entries, false);
     }
 
-    public static void infoPlayer(Player target, EnumWrappers.PlayerInfoAction action,
-                                  Collection<ProtocolPlayer> players) {
-        if (cannotSend(target, players)) {
+    public static void infoPlayer(Player target, EnumWrappers.PlayerInfoAction action, Collection<ProtocolPlayer> players) {
+        if (cannotSend(target, players))
             return;
-        }
 
         List<PlayerInfoData> entries = new ArrayList<>(players.size());
         for (ProtocolPlayer player : players) {
@@ -96,11 +93,9 @@ public final class Protocol {
         sendPlayerInfoUpdate(target, action, entries, true);
     }
 
-    public static void infoRealPlayer(Player target, EnumWrappers.PlayerInfoAction action,
-                                      Collection<WrappedGameProfile> players) {
-        if (cannotSend(target, players)) {
+    public static void infoRealPlayer(Player target, EnumWrappers.PlayerInfoAction action, Collection<WrappedGameProfile> players) {
+        if (cannotSend(target, players))
             return;
-        }
 
         List<PlayerInfoData> entries = new ArrayList<>(players.size());
         for (WrappedGameProfile player : players) {
@@ -114,9 +109,8 @@ public final class Protocol {
     }
 
     public static void removeBukkitPlayers(Player target, Collection<Player> players) {
-        if (cannotSend(target, players)) {
+        if (cannotSend(target, players))
             return;
-        }
 
         List<UUID> profileIds = new ArrayList<>(players.size());
         for (Player player : players) {
@@ -139,9 +133,8 @@ public final class Protocol {
     }
 
     public static void removePlayers(Player target, Collection<ProtocolPlayer> players) {
-        if (cannotSend(target, players)) {
+        if (cannotSend(target, players))
             return;
-        }
 
         List<UUID> profileIds = new ArrayList<>(players.size());
         for (ProtocolPlayer player : players) {
@@ -160,9 +153,8 @@ public final class Protocol {
     }
 
     public static void removeRealPlayerIds(Player target, Collection<UUID> profileIds) {
-        if (cannotSend(target, profileIds)) {
+        if (cannotSend(target, profileIds))
             return;
-        }
         if (usesModernPlayerInfo()) {
             ModernPlayerInfoProtocol.sendRemove(target, profileIds);
             return;
@@ -184,9 +176,8 @@ public final class Protocol {
     }
 
     static List<PlayerInfoData> readPlayerInfoEntries(PacketContainer packet) {
-        if (usesModernPlayerInfo()) {
+        if (usesModernPlayerInfo())
             return ModernPlayerInfoProtocol.readEntries(packet);
-        }
 
         List<PlayerInfoData> entries = packet.getPlayerInfoDataLists().readSafely(0);
         return entries == null ? Collections.<PlayerInfoData>emptyList() : entries;
