@@ -1,6 +1,7 @@
 package pl.kiosel.playerlist.internal;
 
 import pl.kiosel.playerlist.tablist.Tablist;
+import pl.kiosel.playerlist.protocol.Protocol;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -51,9 +52,9 @@ public class UUIDSet {
     }
     
     public boolean contains(Tablist tablist, UUID uuid, Player viewer) {
-        if (viewer.getUniqueId().equals(uuid) && tablist.isSpectator() && tablist.size() < 80) {
+        if (viewer.getUniqueId().equals(uuid) && (Protocol.usesModernPlayerInfo() || tablist.isSpectator()))
             return true;
-        }
+
         for (UUID uuid1 : uuids)
             if (uuid.equals(uuid1))
                 return true;
@@ -65,9 +66,8 @@ public class UUIDSet {
     }
     
     public UUID getUniqueId(int index, Tablist tablist) {
-        int size = tablist.size();
-        return (tablist.isSpectator() && size < 80 && tablist.getLastLine() == index) ?
-                tablist.getPlayer().getUniqueId() : this.uuids[index];
+        return (!Protocol.usesModernPlayerInfo() && tablist.isSpectator() &&
+                tablist.getLastLine() == index) ? tablist.getPlayer().getUniqueId() : this.uuids[index];
     }
     
     private void initialize() {

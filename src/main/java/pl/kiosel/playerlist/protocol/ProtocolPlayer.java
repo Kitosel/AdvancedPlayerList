@@ -30,10 +30,21 @@ public class ProtocolPlayer {
 	public int getLatency() { return this.ping; }
     
     public boolean dirty() {
-        return this.tablist.isSpectator() && this.tablist.getLastLine() == this.index && this.tablist.size() < 80;
+        return isSpectatorViewerSlot(
+                Protocol.usesModernPlayerInfo(),
+                this.tablist.isSpectator(),
+                this.tablist.getLastLine(),
+                this.index);
+    }
+
+    static boolean isSpectatorViewerSlot(boolean modernPlayerInfo, boolean spectator, int lastLine, int index) {
+        return !modernPlayerInfo && spectator && lastLine >= 0 && lastLine == index;
     }
     
     public WrappedGameProfile getProfile() {
+        if (dirty())
+            return WrappedGameProfile.fromPlayer(this.tablist.getPlayer());
+
         WrappedGameProfile profile = new WrappedGameProfile(getUniqueId(), ' ' + String.valueOf(UUIDSet.getPrefix(index)));
         profile.getProperties().putAll(appended.getProperties());
         return profile;

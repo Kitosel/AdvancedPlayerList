@@ -10,6 +10,9 @@ depend:
 - ProtocolLib
 softdepend:
 - PlaceholderAPI
+- Vault
+- Reserve
+- PlayerPoints
 
 permissions:
    advancedplayerlist.manage.plugin:
@@ -19,6 +22,7 @@ permissions:
          advancedplayerlist.command.enable: true
          advancedplayerlist.command.disable: true
          advancedplayerlist.command.reload: true
+#         advancedplayerlist.command.diag: true
          advancedplayerlist.command.import: true
          advancedplayerlist.command.placeholder: true
          advancedplayerlist.command.check: true
@@ -38,6 +42,8 @@ permissions:
       default: op
    advancedplayerlist.command.reload:
       default: op
+#   advancedplayerlist.command.diag:
+#      default: op
    advancedplayerlist.command.import:
       default: op
    advancedplayerlist.command.placeholder:

@@ -72,7 +72,10 @@ public class Tablist implements Tickable {
                 Protocol.removePlayers(getPlayer(), profiles);
             }
             this.mode = getPlayer().getGameMode();
-            if (this.isSpectator() && this.size() < 80) {
+            if (this.isSpectator()) {
+                this.handler.removeQueue(this.getPlayer().getUniqueId());
+            }
+            if (!Protocol.usesModernPlayerInfo() && this.isSpectator() && this.size() > 0) {
                 Protocol.removeBukkitPlayers(getPlayer(), Collections.singletonList(this.getPlayer()));
             }
             if (this.lines != null) {
@@ -177,16 +180,25 @@ public class Tablist implements Tickable {
             for (int i = 0; i < 80; ++i) {
                 players.add(UUIDSet.getSet().get(i));
             }
-            if (this.isSpectator() && layout != null && layout.getSize() < 80) {
+            if (!Protocol.usesModernPlayerInfo()
+                    && this.isSpectator() && this.layout != null && this.layout.getSize() > 0) {
                 players.add(getPlayer().getUniqueId());
             }
             Protocol.removeRealPlayerIds(player, players);
         }
         this.layout = layout;
         updateLayout();
+        updatePlayer();
     }
 
 	protected void updatePlayer() {
+        if (!Protocol.usesModernPlayerInfo() && this.isSpectator() && this.size() == 0) {
+            this.handler.removeQueue(this.getPlayer().getUniqueId());
+            Protocol.infoBukkitPlayer(
+                    this.getPlayer(),
+                    EnumWrappers.PlayerInfoAction.ADD_PLAYER,
+                    Collections.singletonList(this.getPlayer()));
+        }
     }
     
     public void start() {

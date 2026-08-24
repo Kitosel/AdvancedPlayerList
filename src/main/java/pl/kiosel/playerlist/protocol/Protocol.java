@@ -8,6 +8,7 @@ import com.comphenix.protocol.wrappers.EnumWrappers;
 import com.comphenix.protocol.wrappers.PlayerInfoData;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
 import com.comphenix.protocol.wrappers.WrappedGameProfile;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import pl.kiosel.playerlist.util.Utils;
@@ -39,19 +40,7 @@ public final class Protocol {
     }
 
     public static EnumWrappers.NativeGameMode convert(GameMode bukkit) {
-        if (bukkit != null) {
-            switch (bukkit) {
-                case ADVENTURE:
-                    return EnumWrappers.NativeGameMode.ADVENTURE;
-                case CREATIVE:
-                    return EnumWrappers.NativeGameMode.CREATIVE;
-                case SPECTATOR:
-                    return EnumWrappers.NativeGameMode.SPECTATOR;
-                case SURVIVAL:
-                    return EnumWrappers.NativeGameMode.SURVIVAL;
-            }
-        }
-        return EnumWrappers.NativeGameMode.NOT_SET;
+        return EnumWrappers.NativeGameMode.fromBukkit(bukkit);
     }
 
     public static void headerFooter(Player target, String header, String footer) {
@@ -98,12 +87,13 @@ public final class Protocol {
             return;
 
         List<PlayerInfoData> entries = new ArrayList<>(players.size());
-        for (WrappedGameProfile player : players) {
+        for (WrappedGameProfile profile : players) {
+            Player player = profile == null ? null : Bukkit.getPlayer(profile.getUUID());
             entries.add(createPlayerInfoData(
-                    player,
-                    0,
-                    EnumWrappers.NativeGameMode.SURVIVAL,
-                    nullChat));
+                    profile,
+                    player == null ? 0 : getPlayerPing(player),
+                    player == null ? EnumWrappers.NativeGameMode.NOT_SET : convert(player.getGameMode()),
+                    player == null ? nullChat : WrappedChatComponent.fromText(player.getPlayerListName())));
         }
         sendPlayerInfoUpdate(target, action, entries, false);
     }
@@ -180,7 +170,7 @@ public final class Protocol {
             return ModernPlayerInfoProtocol.readEntries(packet);
 
         List<PlayerInfoData> entries = packet.getPlayerInfoDataLists().readSafely(0);
-        return entries == null ? Collections.<PlayerInfoData>emptyList() : entries;
+        return entries == null ? Collections.emptyList() : entries;
     }
 
     static Set<EnumWrappers.PlayerInfoAction> readModernPlayerInfoActions(PacketContainer packet) {

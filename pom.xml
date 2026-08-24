@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>pl.kiosel.playerlist</groupId>
-    <artifactId>AdvancedPlayerList</artifactId>
-    <version>1.0.1</version>
+    <artifactId>advancedplayerlist</artifactId>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
 
     <name>AdvancedPlayerList</name>
@@ -25,6 +25,14 @@
 		<junit.version>5.10.5</junit.version>
 		<lombok.version>1.18.46</lombok.version>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/Kitosel/AdvancedPlayerList</url>
+        </repository>
+    </distributionManagement>
 
     <build>
         <plugins>

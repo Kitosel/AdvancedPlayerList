@@ -28,6 +28,7 @@ public class AdminCommand extends RosaCommand {
 		addSubCommand(new PlaceholderSubCommand(plugin));
 		addSubCommand(new CheckSubCommand(plugin));
 		addSubCommand(new SizeSubCommand(plugin));
+//		addSubCommand(new DiagSubCommand(plugin));
     }
 
     @Override

@@ -129,7 +129,7 @@ public final class TablistHandler {
             applyLineData(line, data);
 
             int column = Math.min(hideEmptyColumn.length - 1, index / linesPerColumn);
-            if (contentEmptyColumn[column] && hideEmptyColumn[column]) {
+            if (!line.getUnsafe().dirty() && contentEmptyColumn[column] && hideEmptyColumn[column]) {
                 line.hide();
             } else {
                 line.show();

@@ -41,9 +41,46 @@ final class ModernPlayerInfoProtocol {
         return result == null ? Collections.emptyList() : result;
     }
 
+    static void writeEntries(PacketContainer packet, List<PlayerInfoData> entries) {
+        StructureModifier<List<PlayerInfoData>> modifier = packet.getPlayerInfoDataLists();
+        if (modifier.size() == 0) {
+            throw new IllegalStateException("ProtocolLib did not expose PLAYER_INFO entry fields");
+        }
+        modifier.write(modifier.size() - 1, entries);
+    }
+
+    static PlayerInfoData withListed(PlayerInfoData data, boolean listed) {
+        return new PlayerInfoData(
+                data.getProfileId(),
+                data.getLatency(),
+                listed,
+                data.getGameMode(),
+                data.getProfile(),
+                data.getDisplayName(),
+                data.getRemoteChatSessionData());
+    }
+
     static Set<EnumWrappers.PlayerInfoAction> readActions(PacketContainer packet) {
         Set<EnumWrappers.PlayerInfoAction> actions = packet.getPlayerInfoActions().readSafely(0);
         return actions == null ? Collections.emptySet() : actions;
+    }
+
+    static EnumSet<EnumWrappers.PlayerInfoAction> withoutTabMetadata(Set<EnumWrappers.PlayerInfoAction> actions) {
+        EnumSet<EnumWrappers.PlayerInfoAction> filtered = EnumSet.noneOf(EnumWrappers.PlayerInfoAction.class);
+        if (actions != null) {
+            filtered.addAll(actions);
+        }
+        filtered.remove(EnumWrappers.PlayerInfoAction.UPDATE_LATENCY);
+        filtered.remove(EnumWrappers.PlayerInfoAction.UPDATE_DISPLAY_NAME);
+        return filtered;
+    }
+
+    static void writeActions(PacketContainer packet, Set<EnumWrappers.PlayerInfoAction> actions) {
+        EnumSet<EnumWrappers.PlayerInfoAction> compatible = EnumSet.noneOf(EnumWrappers.PlayerInfoAction.class);
+        if (actions != null) {
+            compatible.addAll(actions);
+        }
+        packet.getPlayerInfoActions().write(0, compatible);
     }
 
     static void sendRemove(Player target, Collection<UUID> profileIds) {
