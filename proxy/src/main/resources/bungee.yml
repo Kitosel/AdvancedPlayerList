@@ -1,0 +1,4 @@
+name: AdvancedPlayerListBungeeBridge
+main: pl.kiosel.playerlist.bridge.proxy.BungeePlayerList
+version: '${project.version}'
+author: Kiosel

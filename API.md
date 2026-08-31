@@ -28,7 +28,7 @@ separates the identifier from its parameter.
 package pl.kiosel.advancedvillages.placeholder;
 
 import org.bukkit.entity.Player;
-import pl.kiosel.playerlist.api.AdvancedPlaceholder;
+import pl.kiosel.playerlist.api.AdvancedTabPlaceholder;
 import pl.kiosel.playerlist.api.PlaceholderContext;
 
 public final class VillagePlaceholder implements AdvancedPlaceholder {

@@ -1,6 +1,5 @@
 # User-specific stuff
 .idea/
-assets/
 
 *.iml
 *.ipr
@@ -96,7 +95,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-target/
+bukkit/target/
+proxy/target/
 
 pom.xml.tag
 pom.xml.releaseBackup

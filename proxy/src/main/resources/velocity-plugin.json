@@ -1,0 +1,7 @@
+{
+  "id": "advancedplayerlistbridge",
+  "name": "AdvancedPlayerListVelocityBridge",
+  "version": "${project.version}",
+  "main": "pl.kiosel.playerlist.bridge.proxy.VelocityPlayerList",
+  "authors": ["Kiosel"]
+}

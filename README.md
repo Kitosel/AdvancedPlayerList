@@ -11,6 +11,8 @@ It is designed to work with both legacy and modern Minecraft server versions.
 - A per world layout
 - Animated and multiline text
 - Player, world and server-list handlers
+- Velocity and BungeeCord network bridge
+- Folia scheduler support
 - Fake and offline player support
 - Dynamic Slots
 - Custom Placeholders using JavaScript
@@ -28,6 +30,26 @@ It is designed to work with both legacy and modern Minecraft server versions.
 1. Install ProtocolLib and optionally PlaceholderAPI.
 2. Put `AdvancedPlayerList.jar` in the server's `plugins` directory.
 3. Restart the server and edit the generated configuration files.
+
+## Velocity and BungeeCord
+
+The proxy bridge is a separate small JAR that works on both Velocity and BungeeCord.
+
+1. Put `AdvancedPlayerListBridge-1.1.0.jar` in the proxy's `plugins` directory.
+2. Put the normal AdvancedPlayerList JAR and ProtocolLib on every backend server.
+3. Set `bridge.enabled: true` in `config.yml` on every backend.
+4. Restart the proxy and all backend servers. Use `/tab diag` to verify the connection.
+
+The bridge supplies `NETWORK_PLAYER_LIST`, `SERVER_LIST`, `NETWORK_WORLD_LIST`
+and `SERVER_REMOTE_HANDLER`. `BUNGEECORD_PLAYER_LIST` remains as a legacy alias.
+See [BRIDGE.md](BRIDGE.md) for configuration examples and limitations.
+
+## Folia
+
+The plugin is marked as Folia-compatible and schedules each player's tab list on
+that player's entity scheduler. Global and delayed work uses RosaCore's Folia-aware
+scheduler. ProtocolLib and PlaceholderAPI expansions used by your configuration
+must also support your Folia build.
 
 ## Placeholders
 
@@ -56,7 +78,13 @@ RosaCore `0.1.0` must be installed in the local Maven repository. Then run:
 mvn clean package
 ```
 
-The compiled plugin will be created in the `target` directory.
+This builds exactly two plugin JARs:
+
+- `bukkit/target/AdvancedPlayerList-1.1.0.jar` for Bukkit, Spigot, Paper and Folia,
+- `proxy/target/AdvancedPlayerListBridge-1.1.0.jar` for Velocity or BungeeCord.
+
+You can also build only one plugin with `mvn -pl bukkit package` or
+`mvn -pl proxy package`.
 
 ## License
 
