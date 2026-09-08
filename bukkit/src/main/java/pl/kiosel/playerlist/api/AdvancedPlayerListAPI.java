@@ -102,6 +102,39 @@ public final class AdvancedPlayerListAPI implements Listener, AutoCloseable {
         return Collections.unmodifiableList(new ArrayList<>(registrations.keySet()));
     }
 
+	public synchronized void installProfile(Plugin owner, TablistProfile profile, boolean activate) {
+		ensureOpen();
+		plugin.getProfileManager().install(owner, profile);
+		if (activate) {
+			plugin.getProfileManager().activate(owner, profile.getId());
+		}
+	}
+
+	public synchronized void activateProfile(Plugin owner, String profileId) {
+		ensureOpen();
+		plugin.getProfileManager().activate(owner, profileId);
+	}
+
+	public synchronized String restorePreviousProfile(Plugin owner) {
+		ensureOpen();
+		return plugin.getProfileManager().restore(owner);
+	}
+
+	public synchronized String getActiveProfile() {
+		ensureOpen();
+		return plugin.getProfileManager().getActiveProfile();
+	}
+
+	public synchronized String getPreviousProfile() {
+		ensureOpen();
+		return plugin.getProfileManager().getPreviousProfile();
+	}
+
+	public synchronized List<TablistProfileInfo> getProfiles() {
+		ensureOpen();
+		return plugin.getProfileManager().getProfiles();
+	}
+
     @EventHandler
     public void onPluginDisable(PluginDisableEvent event) {
         if (event.getPlugin() != plugin) unregisterAll(event.getPlugin());

@@ -12,6 +12,7 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.entity.Player;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import pl.kiosel.rosacore.utils.NumberUtils;
 
 import java.util.Locale;
 
@@ -39,6 +40,8 @@ public class InternalParameterized implements ParameterizedPlaceholder {
             ServerData server = data.get(ExtraData.DATA_SERVER);
             if (server != null) {
 				switch (param) {
+                    case "tps":
+                        return NumberUtils.formatTps(AdvancedPlayerList.getInstance().getNMS().getNmsServer().getTpsInLastMinute());
 		            case "is_online":
 						return String.valueOf(server.isOnline());
 					case "name":
@@ -70,16 +73,15 @@ public class InternalParameterized implements ParameterizedPlaceholder {
                 }
             } else if (worldData instanceof ServerWorldData) {
                 ServerWorldData world = (ServerWorldData) worldData;
-                if ("name".equals(param)) {
-                    return world.getName();
-                }
-                if ("player_count".equals(param)) {
-                    return Integer.toString(world.getPlayerCount());
-                }
-                if ("server".equals(param)) {
-                    return world.getServerName();
-                }
-            } else if (worldData instanceof World) {
+				switch (param) {
+		            case "name":
+						return world.getName();
+					case "player_count":
+						return Integer.toString(world.getPlayerCount());
+					case "server":
+						return world.getServerName();
+				}
+			} else if (worldData instanceof World) {
                 World world = (World)worldData;
                 if ("name".equals(param)) {
                     return world.getName();

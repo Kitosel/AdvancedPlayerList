@@ -35,6 +35,7 @@ import pl.kiosel.playerlist.placeholder.parameterized.InternalParameterized;
 import pl.kiosel.playerlist.placeholder.simple.*;
 import pl.kiosel.playerlist.protocol.Protocol;
 import pl.kiosel.playerlist.protocol.ProtocolListener;
+import pl.kiosel.playerlist.tablist.TablistProfileManager;
 import pl.kiosel.playerlist.model.skin.SkinToolkit;
 import pl.kiosel.playerlist.tablist.TablistDisplay;
 import pl.kiosel.playerlist.tablist.TablistLayout;
@@ -72,6 +73,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
     @Getter private TablistManager tablistManager;
     @Getter private InternalLayoutHandler layoutHandler;
     @Getter private AdvancedPlayerListAPI api;
+	@Getter private TablistProfileManager profileManager;
     @Getter private BridgeClient bridgeClient;
 
     public TablistDisplay globalDisplay;
@@ -100,6 +102,8 @@ public final class AdvancedPlayerList extends RosaPlugin {
         configFile = loadConfig(ConfigFile.CONFIG.getPath());
         handlerFile = loadConfig(ConfigFile.HANDLER.getPath());
         globalFile = loadConfig(ConfigFile.GLOBAL.getPath());
+		profileManager = new TablistProfileManager(this, configFile, handlerFile, globalFile);
+		profileManager.reloadSelection();
 
         setLocale(configFile.getString("locale"));
 
@@ -179,8 +183,9 @@ public final class AdvancedPlayerList extends RosaPlugin {
             }
             if (bridgeClient != null) {
                 bridgeClient.close();
-                bridgeClient = null;
+				bridgeClient = null;
             }
+			profileManager = null;
             HandlerList.unregisterAll((Plugin) this);
         } finally {
             Ticker.shutdown();
@@ -206,8 +211,13 @@ public final class AdvancedPlayerList extends RosaPlugin {
     @Override
     public void onConfigReload() {
         setLocale(configFile.getString("locale"));
+		profileManager.reloadSelection();
         applyConfiguration();
     }
+
+	public void applyActiveProfileConfiguration() {
+		applyConfiguration();
+	}
 
     private void applyConfiguration() {
         this.tablistManager.setTablistEnabled(false);
@@ -225,10 +235,10 @@ public final class AdvancedPlayerList extends RosaPlugin {
         loadScriptBindings(this.configFile.getConfigurationSection("script-engine.bindings"));
 
         PlaceholderManager.unregisterIf(this::isConfigurationPlaceholder);
-        ComplexParser.parseAndRegister(rootSection(handlerFile));
+        ComplexParser.parseAndRegister(rootSection(profileManager.getActiveHandler()));
         registerCustomPlaceholders(this.configFile.getConfigurationSection("custom-placeholders"));
 
-        loadGlobalLayout(rootSection(globalFile));
+        loadGlobalLayout(rootSection(profileManager.getActiveGlobal()));
         loadWorldLayouts();
 
         tablistManager.setTablistEnabled(this.configFile.getBoolean("tablist-enabled"));

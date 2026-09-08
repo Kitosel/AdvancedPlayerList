@@ -20,6 +20,12 @@ public enum Lang implements MessageKey {
 	ACTUAL_SIZE("command.admin.actual-size"),
 	INVALID_SIZE("command.admin.invalid-size"),
 	INVALID_NUMBER("command.admin.invalid-number"),
+	PROFILE_USAGE("command.admin.profile.usage"),
+	PROFILE_LIST("command.admin.profile.list"),
+	PROFILE_STATUS("command.admin.profile.status"),
+	PROFILE_ACTIVATED("command.admin.profile.activated"),
+	PROFILE_RESTORED("command.admin.profile.restored"),
+	PROFILE_ERROR("command.admin.profile.error"),
 
 	MAX_CHARACTERS("command.fakeplayer.max-characters"),
 	ALREADY_EXISTS("command.fakeplayer.already-exists"),

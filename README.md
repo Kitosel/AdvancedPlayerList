@@ -11,6 +11,7 @@ It is designed to work with both legacy and modern Minecraft server versions.
 - A per world layout
 - Animated and multiline text
 - Player, world and server-list handlers
+- Creating different profiles and switching between them on the fly
 - Velocity and BungeeCord network bridge
 - Folia scheduler support
 - Fake and offline player support

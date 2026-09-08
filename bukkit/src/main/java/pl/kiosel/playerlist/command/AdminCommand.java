@@ -6,12 +6,9 @@ import pl.kiosel.playerlist.command.adminsubcommand.*;
 import java.util.List;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import org.bukkit.command.CommandSender;
 import pl.kiosel.rosacore.command.RosaCommand;
-import pl.kiosel.rosacore.command.RosaSubCommand;
-import pl.kiosel.rosacore.utils.ColorUtils;
 
 public class AdminCommand extends RosaCommand {
 
@@ -29,6 +26,7 @@ public class AdminCommand extends RosaCommand {
 		addSubCommand(new CheckSubCommand(plugin));
 		addSubCommand(new SizeSubCommand(plugin));
 		addSubCommand(new DiagSubCommand(plugin));
+		addSubCommand(new ProfileSubCommand(plugin));
     }
 
     @Override

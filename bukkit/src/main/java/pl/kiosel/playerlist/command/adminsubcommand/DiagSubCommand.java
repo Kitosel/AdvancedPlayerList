@@ -42,6 +42,7 @@ public class DiagSubCommand extends RosaSubCommand {
 
 	@Override
 	public void run(CommandSender sender, String[] args) {
+		String protocolver = plugin.getServer().getPluginManager().getPlugin("ProtocolLib").getDescription().getVersion();
 		sendOptionalMessage(sender, "&8&m--------------------------------");
 		sendOptionalMessage(sender, "&6AdvancedPlayerList &fv" + plugin.getDescription().getVersion());
 
@@ -50,6 +51,7 @@ public class DiagSubCommand extends RosaSubCommand {
 				+ " &7(" + (Protocol.usesModernPlayerInfo() ? "modern" : "legacy") + ")");
 
 		sendOptionalMessage(sender, "&fJava: &e" + ReflectionUtils.JAVA_VERSION);
+		sendOptionalMessage(sender, "&fProtocolLib Version &e" + protocolver);
 		sendOptionalMessage(sender, "&fScripts: &e" + Evaluator.getEngineSource());
 
 		List<String> problems = Diagnostics.inspect(plugin);

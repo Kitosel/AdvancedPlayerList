@@ -28,6 +28,7 @@ permissions:
          advancedplayerlist.command.placeholder: true
          advancedplayerlist.command.check: true
          advancedplayerlist.command.size: true
+         advancedplayerlist.command.profile: true
    advancedplayerlist.manage.fakeplayer:
       description: Allows you to manage fake players
       default: op
@@ -52,6 +53,8 @@ permissions:
    advancedplayerlist.command.check:
       default: op
    advancedplayerlist.command.size:
+      default: op
+   advancedplayerlist.command.profile:
       default: op
    advancedplayerlist.command.create:
       default: op

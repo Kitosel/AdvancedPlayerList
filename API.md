@@ -75,3 +75,22 @@ when their owning plugin is disabled. They can also be removed manually:
 ```java
 AdvancedPlayerListAPI.get().unregister(this, "village");
 ```
+# Tablist profiles
+
+Integrations can install a named layout without overwriting the server owner's
+`global.yml` or `handler.yml`:
+
+```java
+AdvancedPlayerListAPI api = AdvancedPlayerListAPI.get();
+TablistProfile profile = new TablistProfile(
+        "my-plugin",
+        "My plugin",
+        globalYaml,
+        handlerYaml
+);
+api.installProfile(this, profile, true);
+```
+
+Profiles are stored under `profiles/<id>/`. The built-in `default` profile keeps
+using the original top-level files. `restorePreviousProfile(this)` returns to
+the profile that was active before the integration was enabled.

@@ -16,6 +16,13 @@ command:
     actual-size: "&7Actual tablist size is &e%size% &7rows"
     invalid-size: "&cInvalid tablist size: &e%size%. &7Use: 1, 2, 3, 4"
     invalid-number: "&cInput a number!"
+    profile:
+      usage: "&7Usage: &e/tab profile <list|status|activate|restore>"
+      list: "&7Installed profiles: %profiles%"
+      status: "&7Active profile: &a%active% &8(previous: &7%previous%&8)"
+      activated: "&7Activated tablist profile &a%profile%&7."
+      restored: "&7Restored tablist profile &a%profile%&7."
+      error: "&cProfile operation failed: &7%error%"
   fakeplayer:
     max-characters: "&7Fake player names can contain at most 16 characters."
     already-exists: "&7A fake player called &c%name% &7already exists."
