@@ -28,7 +28,10 @@ public class Tablist implements Tickable {
     @Getter private String header;
     @Getter private String footer;
     @Getter @Setter private TablistLayoutHandler layoutHandler;
+
     private final boolean offlinePlayer;
+    @Setter
+    @Getter private boolean enabled;
     private TablistDisplay display;
     protected TablistLine[] lines;
     private GameMode mode;
@@ -206,11 +209,12 @@ public class Tablist implements Tickable {
         this.updatePlayer();
         Ticker.register(player, this);
         this.handler.addPlayers();
+        setEnabled(true);
     }
     
     public void stop() {
         unregisterTask();
-        handler.clear();
+        this.handler.clear();
         if (player.isOnline()) {
             if (lines != null) {
                 int size = this.size();
@@ -225,6 +229,7 @@ public class Tablist implements Tickable {
             Protocol.headerFooter(player, null, null);
             this.handler.addPlayers();
         }
+        setEnabled(false);
     }
     
     public void updateDisplay() {

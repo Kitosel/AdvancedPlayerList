@@ -7,7 +7,7 @@
     <parent>
         <groupId>pl.kiosel.playerlist</groupId>
         <artifactId>advancedplayerlist-parent</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -30,7 +30,7 @@
     </distributionManagement>
 
     <build>
-        <finalName>AdvancedPlayerList-${project.version}</finalName>
+        <finalName>${project.name}-${project.version}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -170,7 +170,7 @@
         <dependency>
             <groupId>pl.kiosel.playerlist</groupId>
             <artifactId>advancedplayerlist-proxy</artifactId>
-            <version>1.1.1</version>
+            <version>1.1.2</version>
             <scope>provided</scope>
         </dependency>
 

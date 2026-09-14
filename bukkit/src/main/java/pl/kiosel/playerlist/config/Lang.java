@@ -10,6 +10,8 @@ public enum Lang implements MessageKey {
 	TABLIST_ALREADY_ENABLED("command.admin.tablist-already-enabled"),
 	TABLIST_ALREADY_DISABLED("command.admin.tablist-already-disabled"),
 	RELOAD("command.admin.reload"),
+	TOGGLE_ENABLE("command.toggle-enable"),
+	TOGGLE_DISABLE("command.toggle-disable"),
 	CHECK_PLACEHOLDERS("command.admin.check-placeholders"),
 	MISSING_PLACEHOLDERS("command.admin.missing-placeholders"),
 	REQUIRE_PLACEHOLDER("command.admin.require-placeholderapi"),

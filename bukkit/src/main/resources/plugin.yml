@@ -20,6 +20,8 @@ permissions:
       description: Allows you to manage the plugin
       default: op
       children:
+         advancedplayerlist.command.main: true
+         advancedplayerlist.command.toggle: true
          advancedplayerlist.command.enable: true
          advancedplayerlist.command.disable: true
          advancedplayerlist.command.reload: true
@@ -38,6 +40,10 @@ permissions:
          advancedplayerlist.command.edit: true
          advancedplayerlist.command.list: true
 
+   advancedplayerlist.command.main:
+      default: true
+   advancedplayerlist.command.toggle:
+      default: true
    advancedplayerlist.command.enable:
       default: op
    advancedplayerlist.command.disable:

@@ -1,5 +1,7 @@
 prefix: "&8[&dAdvanced&bPlayerList&8]"
 command:
+  toggle-enable: "&aEnabled &7tablist for you."
+  toggle-disable: "&cDisabled &7tablist for you."
   admin:
     tablist-enable: "&7Tablist has been &aenabled!"
     tablist-disable: "&7Tablist has been &cdisabled!"

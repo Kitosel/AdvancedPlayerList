@@ -14,7 +14,7 @@ public class AdminCommand extends RosaCommand {
 
     public AdminCommand(AdvancedPlayerList plugin) {
         super(plugin, "advancedplayerlist", Arrays.asList("playerlist", "tablist", "tab"));
-		setPermission("advancedplayerlist.manage.plugin");
+		setPermission("advancedplayerlist.command.main");
 		setDescription("Admin command for AdvancedPlayerList");
 		setUsage("/advancedplayerlist");
 

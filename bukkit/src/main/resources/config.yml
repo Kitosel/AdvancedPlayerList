@@ -23,7 +23,7 @@ task-interval: 20
 # Cross-server data for Velocity and BungeeCord.
 # Install AdvancedPlayerListBridge on the proxy and enable this on every backend.
 bridge:
-  enabled: true
+  enabled: false
   # How often this backend sends its world snapshot (minimum 20 ticks).
   update-interval: 40
 

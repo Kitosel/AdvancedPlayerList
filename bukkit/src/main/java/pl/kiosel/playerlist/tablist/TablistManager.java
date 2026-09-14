@@ -52,6 +52,10 @@ public class TablistManager {
 		}
 	}
 
+	public boolean hasTablistEnabled(Player player) {
+		return getTablist(player) != null && getTablist(player).isEnabled();
+	}
+
 	public void disableTablist(Player player) {
 		Tablist tablist = getTablist(player);
 		player.removeMetadata(TABLIST_METADATA, plugin);

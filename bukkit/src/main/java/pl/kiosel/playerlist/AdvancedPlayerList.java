@@ -44,6 +44,7 @@ import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.playerlist.util.Utils;
 import pl.kiosel.rosacore.RosaPlugin;
 import pl.kiosel.rosacore.config.RosaConfig;
+import pl.kiosel.rosacore.utils.Metrics;
 import pl.kiosel.rosacore.utils.ReflectionUtils;
 import pl.kiosel.rosacore.version.Version;
 
@@ -95,6 +96,8 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
     @Override
     public void onPluginEnable() {
+        new Metrics(this, 33982);
+
 		Diagnostics.clear();
 		placeholderAPI = true;
 		fullyStarted = false;
