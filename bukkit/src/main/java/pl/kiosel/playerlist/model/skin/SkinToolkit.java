@@ -1,7 +1,5 @@
 package pl.kiosel.playerlist.model.skin;
 
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
-import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -15,6 +13,7 @@ import pl.kiosel.playerlist.model.Diagnostics;
 import pl.kiosel.playerlist.model.Ticker;
 import pl.kiosel.playerlist.placeholder.PlaceholderManager;
 import pl.kiosel.rosacore.RosaLogger;
+import pl.kiosel.rosacore.nms.api.tablist.TabListSkin;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -29,7 +28,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.Base64;
 import java.util.Locale;
 import java.util.Map;
@@ -48,7 +46,7 @@ public class SkinToolkit {
     private static final Pattern MINECRAFT_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
     private static final UUID EMPTY_UUID = new UUID(0L, 0L);
 
-    private static volatile SkinToolkit toolkit = new SkinToolkit();
+    private static final SkinToolkit toolkit = new SkinToolkit();
 
     private final Map<String, AtomicReference<UUID>> nameToUuid = new ConcurrentHashMap<>();
     private final Map<UUID, AtomicReference<Skin>> uuidToSkin = new ConcurrentHashMap<>();
@@ -57,13 +55,6 @@ public class SkinToolkit {
 
     public static SkinToolkit getDefaultToolkit() {
         return toolkit;
-    }
-
-    public static void setDefaultToolkit(SkinToolkit replacement) {
-        if (replacement == null) {
-            throw new NullPointerException("toolkit");
-        }
-        toolkit = replacement;
     }
 
     public void setMineSkinApiKey(String apiKey) {
@@ -207,13 +198,11 @@ public class SkinToolkit {
             }
         }
 
-        Collection<WrappedSignedProperty> textures = WrappedGameProfile.fromPlayer(player)
-                .getProperties().get("textures");
-        if (textures.isEmpty()) {
+        TabListSkin property = TabListSkin.fromPlayer(player);
+        if (property == null) {
             return null;
         }
 
-        WrappedSignedProperty property = textures.iterator().next();
         Skin skin = supplied == null ? new Skin() : supplied;
         skin.setKey(player.getUniqueId());
         skin.uuid = player.getUniqueId();

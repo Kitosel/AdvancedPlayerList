@@ -85,7 +85,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
     @Getter private PlayerBank playerBank;
     @Getter private OfflinePlayerDatabase offlinePlayerDatabase;
-    private ProtocolListener protocolListener;
+    @Getter private ProtocolListener protocolListener;
     private boolean fullyStarted;
 
     @Override
@@ -115,16 +115,13 @@ public final class AdvancedPlayerList extends RosaPlugin {
             emergencyStop();
             return;
         }
+        checkDependencies();
 
         log("&aCompatibility mode: &fMinecraft "
                 + Version.getServerVersion()
                 + " &7(" + (Protocol.usesModernPlayerInfo() ? "modern" : "legacy") + ")"
                 + "&f, Java " + ReflectionUtils.JAVA_VERSION
                 + "&f, scripts: " + Evaluator.getEngineSource());
-
-        if (!checkDependencies()) {
-            return;
-        }
 
         if (getHookManager().getEconomy().isAvailable(configFile.getString("economy"))) {
             getHookManager().getEconomy().setPreferredHook(configFile.getString("economy"));
@@ -247,19 +244,12 @@ public final class AdvancedPlayerList extends RosaPlugin {
         tablistManager.setTablistEnabled(this.configFile.getBoolean("tablist-enabled"));
     }
 
-    private boolean checkDependencies() {
+    private void checkDependencies() {
         PluginManager manager = getServer().getPluginManager();
-        if (!manager.isPluginEnabled("ProtocolLib")) {
-            Utils.sendProtocolMessage();
-            emergencyStop();
-            return false;
-        }
         if (!manager.isPluginEnabled("PlaceholderAPI")) {
             Utils.sendPlaceholderMessage();
             placeholderAPI = false;
-            return true;
         }
-        return true;
     }
 
     private boolean isConfigurationPlaceholder(Placeholder placeholder) {

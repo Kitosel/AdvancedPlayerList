@@ -1,22 +1,19 @@
 package pl.kiosel.playerlist.tablist;
 
-import com.comphenix.protocol.wrappers.EnumWrappers;
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import pl.kiosel.playerlist.internal.LineData;
+import pl.kiosel.playerlist.internal.UUIDSet;
 import pl.kiosel.playerlist.model.Ticker;
 import pl.kiosel.playerlist.protocol.Protocol;
-import pl.kiosel.playerlist.protocol.ProtocolPlayer;
+import pl.kiosel.rosacore.nms.api.tablist.TabList;
+import pl.kiosel.rosacore.nms.api.tablist.TabListCell;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,23 +34,33 @@ public final class TablistHandler {
         quickUpdate = false;
     }
 
-    public void addPlayer(WrappedGameProfile profile) {
-        if (profile == null || removeQueue.containsKey(profile.getUUID())) {
+    public void addPlayer(Player player) {
+        if (player == null || removeQueue.containsKey(player.getUniqueId())) {
             return;
         }
-        Protocol.infoRealPlayer(tablist.getPlayer(),
-                EnumWrappers.PlayerInfoAction.ADD_PLAYER, Collections.singletonList(profile));
+        TabList nativeTabList = tablist.getNativeTabList();
+        if (nativeTabList != null) {
+            nativeTabList.showRealPlayer(player);
+            Player viewer = tablist.getPlayer();
+            if (Protocol.usesModernPlayerInfo() && viewer.getUniqueId().equals(player.getUniqueId())) {
+                nativeTabList.hideRealPlayer(viewer);
+            } else if (!UUIDSet.getSet().contains(tablist, player.getUniqueId(), viewer)) {
+                removePlayer(player.getUniqueId());
+            }
+        }
     }
 
     public void addPlayers() {
         Player viewer = tablist.getPlayer();
-        List<Player> visiblePlayers = new ArrayList<>();
+        TabList nativeTabList = tablist.getNativeTabList();
+        if (nativeTabList == null) {
+            return;
+        }
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (viewer == player || viewer.canSee(player)) {
-                visiblePlayers.add(player);
+                nativeTabList.showRealPlayer(player);
             }
         }
-        Protocol.infoBukkitPlayer(viewer, EnumWrappers.PlayerInfoAction.ADD_PLAYER, visiblePlayers);
     }
 
     public void removePlayer(UUID uuid) {
@@ -108,7 +115,10 @@ public final class TablistHandler {
                 removeQueue.replace(uuid, remaining, remaining - 1);
             }
         }
-        Protocol.removeRealPlayerIds(tablist.getPlayer(), expired);
+        TabList nativeTabList = tablist.getNativeTabList();
+        if (nativeTabList != null) {
+            for (UUID profileId : expired) nativeTabList.hideRealPlayer(profileId);
+        }
     }
 
     private void updateLayout(TablistLayout layout) {
@@ -117,11 +127,12 @@ public final class TablistHandler {
         boolean[] hideEmptyColumn = calculateConfiguredEmptyColumns(layout, lineCount, linesPerColumn);
         boolean[] contentEmptyColumn = calculateContentEmptyColumns(layout, lineCount, linesPerColumn);
 
-        Set<ProtocolPlayer> addUpdates = new LinkedHashSet<>();
-        Set<ProtocolPlayer> removeUpdates = new LinkedHashSet<>();
-        List<ProtocolPlayer> nameUpdates = new ArrayList<>();
-        List<ProtocolPlayer> latencyUpdates = new ArrayList<>();
-        List<ProtocolPlayer> gameModeUpdates = new ArrayList<>();
+        TabList nativeTabList = tablist.getNativeTabList();
+        if (nativeTabList == null) {
+            return;
+        }
+        boolean changed = nativeTabList.getActiveCellCount() != lineCount;
+        nativeTabList.setActiveCellCount(lineCount);
 
         for (int index = 0; index < lineCount; index++) {
             LineData data = layout.getLine(index);
@@ -135,21 +146,16 @@ public final class TablistHandler {
                 line.show();
             }
 
-            collectUpdates(line, addUpdates, removeUpdates,
-                    nameUpdates, latencyUpdates, gameModeUpdates);
+            TabListCell nextCell = line.getUnsafe().toCell(line.isShown());
+            if (!Objects.equals(nativeTabList.getCell(index), nextCell)) {
+                nativeTabList.setCell(index, nextCell);
+                changed = true;
+            }
             line.resetUpdateFlags();
         }
-
-        nameUpdates.removeAll(addUpdates);
-        latencyUpdates.removeAll(addUpdates);
-        gameModeUpdates.removeAll(addUpdates);
-
-        Player viewer = tablist.getPlayer();
-        Protocol.removePlayers(viewer, removeUpdates);
-        Protocol.infoPlayer(viewer, EnumWrappers.PlayerInfoAction.ADD_PLAYER, addUpdates);
-        Protocol.infoPlayer(viewer, EnumWrappers.PlayerInfoAction.UPDATE_DISPLAY_NAME, nameUpdates);
-        Protocol.infoPlayer(viewer, EnumWrappers.PlayerInfoAction.UPDATE_LATENCY, latencyUpdates);
-        Protocol.infoPlayer(viewer, EnumWrappers.PlayerInfoAction.UPDATE_GAME_MODE, gameModeUpdates);
+        if (changed) {
+            nativeTabList.send();
+        }
     }
 
     private boolean[] calculateConfiguredEmptyColumns(TablistLayout layout, int lineCount, int linesPerColumn) {
@@ -180,38 +186,4 @@ public final class TablistHandler {
         line.setGameMode(data.getGameMode());
     }
 
-    private void collectUpdates(TablistLine line,
-                                Set<ProtocolPlayer> addUpdates,
-                                Set<ProtocolPlayer> removeUpdates,
-                                Collection<ProtocolPlayer> nameUpdates,
-                                Collection<ProtocolPlayer> latencyUpdates,
-                                Collection<ProtocolPlayer> gameModeUpdates) {
-        ProtocolPlayer player = line.getUnsafe();
-
-        if (line.updateRemove) {
-            removeUpdates.add(player);
-        }
-        if (line.updateAdd) {
-            addUpdates.add(player);
-        }
-        if (line.updateSkin && line.isShown() && !tablist.isPlayerCracked()) {
-            if (!line.updateAdd) {
-                removeUpdates.add(player);
-            }
-            addUpdates.add(player);
-        }
-
-        if (!line.isShown() || addUpdates.contains(player)) {
-            return;
-        }
-        if (line.updateName) {
-            nameUpdates.add(player);
-        }
-        if (line.updatePing) {
-            latencyUpdates.add(player);
-        }
-        if (line.updateGameMode) {
-            gameModeUpdates.add(player);
-        }
-    }
 }

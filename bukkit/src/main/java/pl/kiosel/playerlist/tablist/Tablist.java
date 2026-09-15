@@ -1,23 +1,21 @@
 package pl.kiosel.playerlist.tablist;
 
-import java.util.*;
+import java.util.Objects;
 
 import lombok.Getter;
 import lombok.Setter;
 import pl.kiosel.playerlist.internal.Tickable;
 import pl.kiosel.playerlist.model.Ticker;
 import pl.kiosel.playerlist.placeholder.PlaceholderManager;
-import pl.kiosel.playerlist.internal.UUIDSet;
 import pl.kiosel.playerlist.event.TablistHeaderChangeEvent;
 import org.bukkit.Bukkit;
 import pl.kiosel.playerlist.event.TablistFooterChangeEvent;
-import com.comphenix.protocol.wrappers.EnumWrappers;
 import pl.kiosel.playerlist.placeholder.ExtraData;
 import org.bukkit.GameMode;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.entity.Player;
-import pl.kiosel.playerlist.protocol.Protocol;
-import pl.kiosel.playerlist.protocol.ProtocolPlayer;
+import pl.kiosel.playerlist.AdvancedPlayerList;
+import pl.kiosel.rosacore.nms.api.tablist.TabList;
 
 public class Tablist implements Tickable {
 
@@ -28,6 +26,7 @@ public class Tablist implements Tickable {
     @Getter private String header;
     @Getter private String footer;
     @Getter @Setter private TablistLayoutHandler layoutHandler;
+    @Getter private TabList nativeTabList;
 
     private final boolean offlinePlayer;
     @Setter
@@ -66,26 +65,12 @@ public class Tablist implements Tickable {
     
     protected void updateGameMode() {
         if (this.mode != getPlayer().getGameMode()) {
-            List<ProtocolPlayer> profiles = new ArrayList<>();
-            if (this.lines != null) {
-                for (int size = this.lines.length, i = 0; i < size; ++i) {
-                    if (this.lines[i] != null) {
-                        profiles.add(this.lines[i].getUnsafe());
-                    }
-                }
-                Protocol.removePlayers(getPlayer(), profiles);
-            }
             this.mode = getPlayer().getGameMode();
             if (this.isSpectator()) {
                 this.handler.removeQueue(this.getPlayer().getUniqueId());
             }
-            if (!Protocol.usesModernPlayerInfo() && this.isSpectator() && this.size() > 0) {
-                Protocol.removeBukkitPlayers(getPlayer(), Collections.singletonList(this.getPlayer()));
-            }
-            if (this.lines != null) {
-                Protocol.infoPlayer(getPlayer(), EnumWrappers.PlayerInfoAction.ADD_PLAYER, profiles);
-            }
-            updatePlayer();
+            this.handler.quickUpdate();
+            this.handler.tick();
         }
     }
     
@@ -129,8 +114,8 @@ public class Tablist implements Tickable {
             return;
         }
         footer = tfce.getText();
-        Protocol.headerFooter(player, header, footer);
         this.footer = footer;
+        sendHeaderFooter();
     }
     
     public void setHeader(String header) {
@@ -143,8 +128,8 @@ public class Tablist implements Tickable {
             return;
         }
         header = thce.getText();
-        Protocol.headerFooter(player, header, this.footer);
         this.header = header;
+        sendHeaderFooter();
     }
     
     public void setHeaderFooter(String header, String footer) {
@@ -170,64 +155,43 @@ public class Tablist implements Tickable {
         } else {
             footer = tfce.getText();
         }
-        Protocol.headerFooter(player, header, footer);
         this.header = header;
         this.footer = footer;
+        sendHeaderFooter();
     }
     
     public void setLayout(TablistLayout layout) {
         if (Objects.deepEquals(layout, this.layout)) {
             return;
         }
-        if (this.lines != null) {
-            List<UUID> players = new ArrayList<>();
-            for (int i = 0; i < 80; ++i) {
-                players.add(UUIDSet.getSet().get(i));
-            }
-            if (!Protocol.usesModernPlayerInfo()
-                    && this.isSpectator() && this.layout != null && this.layout.getSize() > 0) {
-                players.add(getPlayer().getUniqueId());
-            }
-            Protocol.removeRealPlayerIds(player, players);
-        }
         this.layout = layout;
         updateLayout();
-        updatePlayer();
     }
 
 	protected void updatePlayer() {
-        if (!Protocol.usesModernPlayerInfo() && this.isSpectator() && this.size() == 0) {
-            this.handler.removeQueue(this.getPlayer().getUniqueId());
-            Protocol.infoBukkitPlayer(
-                    this.getPlayer(),
-                    EnumWrappers.PlayerInfoAction.ADD_PLAYER,
-                    Collections.singletonList(this.getPlayer()));
-        }
+        this.handler.quickUpdate();
     }
     
     public void start() {
-        this.updatePlayer();
+        AdvancedPlayerList owner = AdvancedPlayerList.getInstance();
+        if (owner == null) {
+            throw new IllegalStateException("AdvancedPlayerList is not initialized");
+        }
+        this.nativeTabList = owner.getNMS().getTabListService().create(player);
+        this.nativeTabList.setHeaderFooter(header, footer);
         Ticker.register(player, this);
         this.handler.addPlayers();
         setEnabled(true);
+        this.handler.quickUpdate();
+        this.handler.tick();
     }
     
     public void stop() {
         unregisterTask();
         this.handler.clear();
-        if (player.isOnline()) {
-            if (lines != null) {
-                int size = this.size();
-                List<ProtocolPlayer> players = new ArrayList<>(size);
-                for (int i = 0; i < size; ++i) {
-                    if (this.lines[i] != null) {
-                        players.add(this.lines[i].getUnsafe());
-                    }
-                }
-                Protocol.removePlayers(getPlayer(), players);
-            }
-            Protocol.headerFooter(player, null, null);
-            this.handler.addPlayers();
+        if (nativeTabList != null) {
+            nativeTabList.clear();
+            nativeTabList = null;
         }
         setEnabled(false);
     }
@@ -260,5 +224,13 @@ public class Tablist implements Tickable {
         }
         this.handler.quickUpdate();
         this.handler.tick();
+    }
+
+    private void sendHeaderFooter() {
+        if (nativeTabList == null) return;
+        if (header == null || header.isEmpty()) return;
+        if (footer == null || footer.isEmpty()) return;
+        nativeTabList.setHeaderFooter(header, footer);
+        nativeTabList.sendHeaderFooter();
     }
 }

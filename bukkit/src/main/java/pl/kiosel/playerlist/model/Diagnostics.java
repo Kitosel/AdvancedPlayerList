@@ -21,8 +21,8 @@ public final class Diagnostics {
     public static List<String> inspect(AdvancedPlayerList plugin) {
         List<String> problems = new ArrayList<>();
 
-        if (!plugin.getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
-            problems.add("ProtocolLib is not enabled");
+        if (plugin.getNMS() == null) {
+            problems.add("RosaCore NMS is not initialized");
         }
         if (!AdvancedPlayerList.isPlaceholderAPI()) {
             problems.add("PlaceholderAPI is not enabled");

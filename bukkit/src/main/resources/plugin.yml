@@ -7,10 +7,9 @@ folia-supported: true
 libraries:
    - org.openjdk.nashorn:nashorn-core:15.6
 
-depend:
-- ProtocolLib
 softdepend:
 - PlaceholderAPI
+- JSEngine
 - Vault
 - Essentials
 - PlayerPoints

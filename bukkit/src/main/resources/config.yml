@@ -8,13 +8,16 @@
 locale: en_US
 tablist-enabled: true
 
+# Allow players to turn on and off tablist by its self
+player-can-toggle-tablist: true
+
 # The default profile uses global.yml and handler.yml from the plugin folder.
 # Installed integrations live in profiles/<id>/ and never overwrite those files.
 profiles:
   active: default
   previous: default
 
-# Prefered Economy (Vault,Reserve,PlayerPoints)
+# Preferred Economy (Vault,Essentials,PlayerPoints)
 economy: Vault
 
 # Global update interval in ticks (20 ticks = 1 second).

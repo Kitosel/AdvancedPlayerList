@@ -1,18 +1,20 @@
 package pl.kiosel.playerlist.protocol;
 
 import java.util.UUID;
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import lombok.Getter;
+import lombok.Setter;
 import pl.kiosel.playerlist.internal.UUIDSet;
 import pl.kiosel.playerlist.tablist.Tablist;
 import org.bukkit.GameMode;
+import pl.kiosel.rosacore.nms.api.tablist.TabListCell;
+import pl.kiosel.rosacore.nms.api.tablist.TabListSkin;
 
 public class ProtocolPlayer {
 
     @Getter private String displayName;
-    @Getter private final WrappedGameProfile appended;
-    private GameMode mode;
-    private int ping;
+    @Setter private TabListSkin skin;
+    @Setter private int ping;
+    @Setter private GameMode gameMode;
     private final int index;
     private final Tablist tablist;
     
@@ -20,11 +22,10 @@ public class ProtocolPlayer {
         this.displayName = "";
         this.tablist = tablist;
         this.index = index;
-        this.appended = new WrappedGameProfile(UUIDSet.getSet().get(index), null);
     }
 
     public GameMode getGameMode() {
-        return this.dirty() ? GameMode.SPECTATOR : ((this.mode == null) ? GameMode.CREATIVE : this.mode);
+        return this.dirty() ? GameMode.SPECTATOR : ((this.gameMode == null) ? GameMode.CREATIVE : this.gameMode);
     }
 
 	public int getLatency() { return this.ping; }
@@ -41,13 +42,20 @@ public class ProtocolPlayer {
         return !modernPlayerInfo && spectator && lastLine >= 0 && lastLine == index;
     }
     
-    public WrappedGameProfile getProfile() {
-        if (dirty())
-            return WrappedGameProfile.fromPlayer(this.tablist.getPlayer());
+    public TabListCell toCell(boolean listed) {
+        TabListSkin renderedSkin = dirty() ? TabListSkin.fromPlayer(tablist.getPlayer()) : skin;
+        return TabListCell.profile(
+                getUniqueId(),
+                getProfileName(),
+                displayName,
+                ping,
+                renderedSkin,
+                getGameMode(),
+                listed);
+    }
 
-        WrappedGameProfile profile = new WrappedGameProfile(getUniqueId(), ' ' + String.valueOf(UUIDSet.getPrefix(index)));
-        profile.getProperties().putAll(appended.getProperties());
-        return profile;
+    public String getProfileName() {
+        return dirty() ? tablist.getPlayer().getName() : ' ' + String.valueOf(UUIDSet.getPrefix(index));
     }
     
     public UUID getUniqueId() {
@@ -57,12 +65,5 @@ public class ProtocolPlayer {
     public void setDisplayName(String display) {
         this.displayName = ((display == null) ? "" : display);
     }
-    
-    public void setGameMode(GameMode mode) {
-        this.mode = mode;
-    }
-    
-    public void setLatency(int ping) {
-        this.ping = ping;
-    }
+
 }

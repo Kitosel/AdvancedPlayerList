@@ -37,7 +37,8 @@ public class CustomParameterized implements ParameterizedPlaceholder {
             SimpleBindings bindings = new SimpleBindings(Evaluator.getBindings());
             bindings.put("param", param);
             bindings.put("player", data.get(ExtraData.DATA_PLAYER));
-            return String.valueOf(Evaluator.evaluate(PlaceholderManager.replace(map, data), bindings));
+            Object result = Evaluator.evaluate(PlaceholderManager.replace(map, data), bindings);
+            return result == null ? null : String.valueOf(result);
         }
         return null;
     }

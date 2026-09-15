@@ -17,72 +17,122 @@ import javax.script.SimpleBindings;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.ServiceConfigurationError;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 public final class Evaluator {
 
+    private static final String[] ENGINE_NAMES = {"Nashorn", "nashorn", "JavaScript", "javascript", "js"};
     private static final SimpleBindings simple = new SimpleBindings();
-    @Getter private static final Set<String> errors = ConcurrentHashMap.newKeySet();
 
-    private static ScriptEngine engine;
+    @Getter
+    private static final Set<String> errors = ConcurrentHashMap.newKeySet();
     @Getter
     private static String engineSource = "none";
+
+    private static ScriptEngine engine;
+    private static boolean initialized;
 
     private Evaluator() {
     }
 
     public static synchronized boolean initialize() {
-        if (engine != null) {
+        if (initialized) {
             return true;
         }
+        initialized = true;
 
-        if (ReflectionUtils.JAVA_VERSION <= 11) {
-            engine = findBundledEngine();
+        if (ReflectionUtils.JAVA_VERSION < 15) {
+            engine = createFactoryEngine("jdk.nashorn.api.scripting.NashornScriptEngineFactory");
             if (engine != null) {
-                engineSource = "built-in " + engine.getFactory().getEngineName();
+                engineSource = "built-in " + engineName(engine);
             }
         }
 
         if (engine == null) {
             engine = findExternalEngine();
             if (engine != null) {
-                engineSource = "JSEngine (" + engine.getFactory().getEngineName() + ")";
+                engineSource = "JSEngine (" + engineName(engine) + ")";
             }
         }
 
         if (engine == null) {
-            engine = findBundledEngine();
+            engine = createFactoryEngine("org.openjdk.nashorn.api.scripting.NashornScriptEngineFactory");
             if (engine != null) {
-                engineSource = "registered " + engine.getFactory().getEngineName();
+                engineSource = "downloaded " + engineName(engine);
             }
         }
 
         if (engine == null) {
-            return false;
+            engine = findRegisteredEngine();
+            if (engine != null) {
+                engineSource = "registered " + engineName(engine);
+            }
         }
 
-        engine.setBindings(simple, ScriptContext.ENGINE_SCOPE);
+        if (engine != null) {
+            engine.setBindings(simple, ScriptContext.ENGINE_SCOPE);
+        } else {
+            engineSource = "native expressions";
+        }
         return true;
     }
 
-    private static ScriptEngine findBundledEngine() {
-        ScriptEngineManager manager = new ScriptEngineManager(Evaluator.class.getClassLoader());
-        String[] names = {"Nashorn", "nashorn", "JavaScript", "javascript", "js"};
-        for (String name : names) {
-            ScriptEngine candidate = manager.getEngineByName(name);
-            if (candidate != null) {
-                return candidate;
+    private static ScriptEngine createFactoryEngine(String className) {
+        Set<ClassLoader> loaders = Collections.newSetFromMap(new IdentityHashMap<>());
+        loaders.add(Evaluator.class.getClassLoader());
+        loaders.add(Thread.currentThread().getContextClassLoader());
+        loaders.add(ClassLoader.getSystemClassLoader());
+
+        for (ClassLoader loader : loaders) {
+            if (loader == null) {
+                continue;
+            }
+            try {
+                Class<?> factoryClass = Class.forName(className, true, loader);
+                Object factory = factoryClass.getDeclaredConstructor().newInstance();
+                Object candidate = factoryClass.getMethod("getScriptEngine").invoke(factory);
+                if (candidate instanceof ScriptEngine) {
+                    return (ScriptEngine) candidate;
+                }
+            } catch (ReflectiveOperationException | LinkageError | SecurityException ignored) {
+            }
+        }
+        return null;
+    }
+
+    private static ScriptEngine findRegisteredEngine() {
+        Set<ClassLoader> loaders = Collections.newSetFromMap(new IdentityHashMap<>());
+        loaders.add(Evaluator.class.getClassLoader());
+        loaders.add(Thread.currentThread().getContextClassLoader());
+        loaders.add(ClassLoader.getSystemClassLoader());
+
+        for (ClassLoader loader : loaders) {
+            if (loader == null) {
+                continue;
+            }
+            try {
+                ScriptEngineManager manager = new ScriptEngineManager(loader);
+                for (String name : ENGINE_NAMES) {
+                    ScriptEngine candidate = manager.getEngineByName(name);
+                    if (candidate != null) {
+                        return candidate;
+                    }
+                }
+            } catch (LinkageError | ServiceConfigurationError | SecurityException ignored) {
             }
         }
         return null;
     }
 
     private static ScriptEngine findExternalEngine() {
-		if (Bukkit.getServer() == null) {
-			return null;
-		}
+        if (Bukkit.getServer() == null) {
+            return null;
+        }
         Plugin plugin = Bukkit.getPluginManager().getPlugin("JSEngine");
         if (plugin == null || !plugin.isEnabled()) {
             return null;
@@ -102,7 +152,15 @@ public final class Evaluator {
         }
     }
 
-	public static void clearBindings() {
+    private static String engineName(ScriptEngine scriptEngine) {
+        try {
+            return scriptEngine.getFactory().getEngineName();
+        } catch (RuntimeException ignored) {
+            return scriptEngine.getClass().getSimpleName();
+        }
+    }
+
+    public static void clearBindings() {
         simple.clear();
     }
 
@@ -110,15 +168,18 @@ public final class Evaluator {
         if (text == null || text.trim().isEmpty()) {
             return true;
         }
-        if (!initialize()) {
-            reportMissingEngine();
-            return null;
+        initialize();
+        if (engine == null) {
+            return evaluateNative(text, simple);
         }
         try {
             return engine.eval(text);
         } catch (ScriptException exception) {
             if (exception.getMessage() != null && errors.add(exception.getMessage())) {
-                RosaLogger.getInstance().warning("&cFAILED TO EVALUATE SCRIPT:" + text + " \n" + exception.getMessage());
+                RosaLogger logger = RosaLogger.getInstance();
+                if (logger != null) {
+                    logger.warning("&cFAILED TO EVALUATE SCRIPT: " + text + "\n" + exception.getMessage());
+                }
             }
             return null;
         }
@@ -128,15 +189,34 @@ public final class Evaluator {
         if (text == null || text.trim().isEmpty()) {
             return null;
         }
-        if (!initialize()) {
-            reportMissingEngine();
-            return null;
+        initialize();
+        Bindings effectiveBindings = bindings == null ? simple : bindings;
+        if (engine == null) {
+            return evaluateNative(text, effectiveBindings);
         }
         try {
-            return engine.eval(text, bindings);
+            return engine.eval(text, effectiveBindings);
         } catch (ScriptException exception) {
             if (onceError(exception)) {
-                RosaLogger.getInstance().warning(String.format("FAILED TO EVALUATE SCRIPT\n %s - %s", text, bindings));
+                RosaLogger logger = RosaLogger.getInstance();
+                if (logger != null) {
+                    logger.warning(String.format("FAILED TO EVALUATE SCRIPT\n %s - %s", text, effectiveBindings));
+                }
+            }
+            return null;
+        }
+    }
+
+    private static Object evaluateNative(String text, Bindings bindings) {
+        try {
+            return ExpressionEvaluator.evaluate(text, bindings);
+        } catch (IllegalArgumentException exception) {
+            String message = "Unsupported native expression: " + text + " (" + exception.getMessage() + ")";
+            if (errors.add(message)) {
+                RosaLogger logger = RosaLogger.getInstance();
+                if (logger != null) {
+                    logger.warning(message + ". Install/enable Nashorn or JSEngine for full JavaScript support.");
+                }
             }
             return null;
         }
@@ -147,7 +227,7 @@ public final class Evaluator {
         if (result instanceof Boolean) {
             return (Boolean) result;
         }
-        return result instanceof Number && ((Number) result).intValue() >= 1;
+        return result instanceof Number && ((Number) result).doubleValue() != 0.0D;
     }
 
     public static Bindings getBindings() {
@@ -183,12 +263,5 @@ public final class Evaluator {
 
     public static void putBindings(String key, Object value) {
         simple.put(key, value);
-    }
-
-    private static void reportMissingEngine() {
-        String message = "No JavaScript engine is available";
-        if (errors.add(message) && RosaLogger.getInstance() != null) {
-            RosaLogger.getInstance().warning(message);
-        }
     }
 }

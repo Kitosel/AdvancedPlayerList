@@ -6,8 +6,8 @@ Bukkit, Spigot, Paper or Folia backend.
 
 ## Installation
 
-1. Install `AdvancedPlayerListBridge-1.1.0.jar` in the proxy `plugins` directory.
-2. Install the normal AdvancedPlayerList JAR and ProtocolLib on every backend.
+1. Install `AdvancedPlayerListBridge-1.2.0.jar` in the proxy `plugins` directory.
+2. Install the normal AdvancedPlayerList JAR on every backend.
 3. Enable the bridge on every backend:
 
 ```yaml

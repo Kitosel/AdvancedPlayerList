@@ -3,8 +3,6 @@ package pl.kiosel.playerlist.tablist;
 import lombok.Getter;
 import lombok.Setter;
 import pl.kiosel.playerlist.event.TablistLineTextChangeEvent;
-import com.comphenix.protocol.wrappers.WrappedGameProfile;
-import com.comphenix.protocol.wrappers.WrappedSignedProperty;
 import pl.kiosel.playerlist.event.TablistLineSkinChangeEvent;
 import pl.kiosel.playerlist.event.TablistLinePingChangeEvent;
 import org.bukkit.Bukkit;
@@ -13,6 +11,7 @@ import java.util.Objects;
 import org.bukkit.GameMode;
 import pl.kiosel.playerlist.protocol.ProtocolPlayer;
 import pl.kiosel.playerlist.model.skin.Skin;
+import pl.kiosel.rosacore.nms.api.tablist.TabListSkin;
 
 public class TablistLine {
 
@@ -75,7 +74,7 @@ public class TablistLine {
         }
         ping = event.getPing();
         this.updatePing = true;
-        this.unsafe.setLatency(ping);
+        this.unsafe.setPing(ping);
     }
     
     public void setSkin(Skin skin) {
@@ -93,7 +92,7 @@ public class TablistLine {
             this.updateSkin = true;
             this.skin = null;
             this.skinDone = false;
-            this.unsafe.getAppended().getProperties().removeAll("textures");
+            this.unsafe.setSkin(null);
             return;
         }
         if (Objects.equals(skin, this.skin)) {
@@ -110,9 +109,9 @@ public class TablistLine {
             return;
         }
         if (this.skin != null && this.skin.getTexture() != null) {
-            WrappedGameProfile profile = this.unsafe.getAppended();
-            profile.getProperties().removeAll("textures");
-            profile.getProperties().put("textures", new WrappedSignedProperty("textures", this.skin.getTexture().getValue(), this.skin.getTexture().getSignature()));
+            this.unsafe.setSkin(TabListSkin.of(
+                    this.skin.getTexture().getValue(),
+                    this.skin.getTexture().getSignature()));
             this.updateSkin = true;
             this.skinDone = true;
         }
