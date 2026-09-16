@@ -1,6 +1,7 @@
 # Main tab-list layout.
 # Handler names from handler.yml use braces: {players}, {worldPlayers}, etc.
-# PlaceholderAPI always uses percent signs: %player_name%.
+# Built-in player/world/server placeholders also accept percent signs.
+# Other %...% placeholders require PlaceholderAPI.
 
 size: 80
 defaultSkin: krep

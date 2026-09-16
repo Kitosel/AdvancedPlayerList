@@ -3,10 +3,10 @@
 # A handler produces one or more tab-list slots and is inserted by its name:
 #   {players}, {worldPlayers}, {serverInformation}
 #
-# PlaceholderAPI uses its normal syntax:
-#   %player_name%, %player_ping%, %vault_eco_balance%
-# Add the "viewer_" prefix to evaluate a PAPI placeholder for the person
-# viewing the tab list, for example: %viewer_player_world%.
+# Built-in player/world/server placeholders also work with percent signs:
+#   %player_name%, %player_ping%, %viewer_player_world%
+# Other percent placeholders, such as %vault_eco_balance%, require PlaceholderAPI.
+# The "viewer_" prefix selects the person viewing the tab list.
 #
 # Main handler types: TEXT, PLAYER_LIST, WORLD_LIST and COMPOUND.
 # Common options: text, skin, ping, condition, sorter, order, header,

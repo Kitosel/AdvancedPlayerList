@@ -8,19 +8,15 @@ import pl.kiosel.playerlist.model.Ticker;
 import pl.kiosel.playerlist.model.WorldGroup;
 import pl.kiosel.playerlist.placeholder.ExtraData;
 import pl.kiosel.playerlist.placeholder.ParameterizedPlaceholder;
-import org.bukkit.metadata.MetadataValue;
-import org.bukkit.entity.Player;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import pl.kiosel.rosacore.utils.NumberUtils;
-
-import java.util.Locale;
 
 public class InternalParameterized implements ParameterizedPlaceholder {
 
     @Override
     public boolean accept(String placeholder) {
-        return "server".equals(placeholder) || "world".equals(placeholder) || "player".equals(placeholder) || "tablist".equals(placeholder);
+        return "server".equals(placeholder) || "world".equals(placeholder) || "tablist".equals(placeholder);
     }
     
     @Override
@@ -41,18 +37,31 @@ public class InternalParameterized implements ParameterizedPlaceholder {
             if (server != null) {
 				switch (param) {
                     case "tps":
-                        return NumberUtils.formatTps(AdvancedPlayerList.getInstance().getNMS().getNmsServer().getTpsInLastMinute());
-		            case "is_online":
+					case "tps_1":
+						return NumberUtils.formatTps(AdvancedPlayerList.getInstance().getNMS().getNmsServer().getTpsInLastMinute());
+					case "is_online":
 						return String.valueOf(server.isOnline());
-					case "name":
-						return server.getServerName();
+					case "online":
 					case "player_count":
 						return String.valueOf(server.getPlayerCount());
+					case "name":
+						return server.getServerName();
 					case "max_players":
 						return String.valueOf(server.getMaxPlayers());
 				}
-			} else if ("name".equals(param)) {
-                return AdvancedPlayerList.getInstance().getName();
+            } else {
+                switch (param) {
+                    case "name":
+                        return AdvancedPlayerList.getInstance().getServer().getServerName();
+                    case "online":
+                    case "player_count":
+                        return String.valueOf(Bukkit.getOnlinePlayers().size());
+                    case "max_players":
+                        return String.valueOf(Bukkit.getMaxPlayers());
+                    case "tps":
+                    case "tps_1":
+                        return NumberUtils.formatTps(AdvancedPlayerList.getInstance().getNMS().getNmsServer().getTpsInLastMinute());
+                }
             }
         } else if ("tablist".equals(placeholder)) {
             if ("performanceMS".equals(param)) {
@@ -96,66 +105,6 @@ public class InternalParameterized implements ParameterizedPlaceholder {
                 }
                 if ("player_count".equals(param)) {
                     return Integer.toString(group.collectPlayers().size());
-                }
-            }
-        } else if ("player".equals(placeholder)) {
-            Object player = data.get(ExtraData.DATA_PLAYER);
-            if (player instanceof BridgeMessages.PlayerData) {
-                BridgeMessages.PlayerData networkPlayer = (BridgeMessages.PlayerData) player;
-                switch (param.toLowerCase(Locale.ROOT)) {
-                    case "name":
-                    case "displayname":
-                    case "listname":
-                        return networkPlayer.getName();
-                    case "uuid":
-                        return networkPlayer.getUniqueId();
-                    case "ping":
-                        return Integer.toString(networkPlayer.getPing());
-                    case "server":
-                        return networkPlayer.getServer();
-                    case "is_online":
-                        return "true";
-                }
-            } else if (player instanceof OfflinePlayer) {
-                final OfflinePlayer op = (OfflinePlayer)player;
-                String normalizedParam = param.toLowerCase(Locale.ROOT);
-                switch (normalizedParam) {
-                    case "name":
-                    case "displayname":
-                        return op.getName();
-                    case "uuid":
-                        return op.getUniqueId().toString();
-                    case "is_online":
-                        return String.valueOf(op.isOnline());
-                    case "is_banned":
-                        return String.valueOf(op.isBanned());
-                    case "is_whitelisted":
-                        return String.valueOf(op.isWhitelisted());
-                    case "is_op":
-                        return String.valueOf(op.isOp());
-                }
-                if (normalizedParam.startsWith("has_permission_")) {
-                    String permission = param.substring("has_permission_".length());
-                    return String.valueOf(player instanceof Player
-                            && !permission.isEmpty()
-                            && ((Player) player).hasPermission(permission));
-                }
-            }
-            String[] par = param.split(":", 2);
-            if (par.length == 2 && par[0].equals("worldgroup") && player instanceof Player) {
-                for (MetadataValue value : ((Player)player).getMetadata("playerGroup:" + par[1])) {
-                    Object val = value.value();
-                    if (val instanceof WorldGroup) {
-                        return ((WorldGroup)val).getName();
-                    }
-                }
-            }
-            if ("world".equals(param) && player instanceof Player) {
-                for (MetadataValue value : ((Player)player).getMetadata("playerGroup")) {
-                    Object val = value.value();
-                    if (val instanceof WorldGroup) {
-                        return ((WorldGroup)val).getName();
-                    }
                 }
             }
         }

@@ -1,7 +1,8 @@
 # AdvancedPlayerList - main settings
 #
 # Placeholder syntax:
-#   %player_name%    -> PlaceholderAPI
+#   %player_name%    -> built-in player placeholder (works without PlaceholderAPI)
+#   %vault_eco_balance% -> PlaceholderAPI, if installed
 #   {players}        -> handler from handler.yml
 #   {playerlocation} -> built-in, scripted or API placeholder
 

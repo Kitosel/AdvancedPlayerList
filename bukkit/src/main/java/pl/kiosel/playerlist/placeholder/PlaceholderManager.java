@@ -4,6 +4,8 @@ import me.clip.placeholderapi.PlaceholderAPI;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.model.Diagnostics;
 import pl.kiosel.playerlist.model.Evaluator;
+import pl.kiosel.playerlist.placeholder.parameterized.InternalParameterized;
+import pl.kiosel.playerlist.placeholder.parameterized.PlayerParameterized;
 import pl.kiosel.rosacore.RosaLogger;
 
 import java.util.LinkedHashSet;
@@ -27,6 +29,7 @@ public final class PlaceholderManager {
     private static final ThreadLocal<Integer> REPLACE_DEPTH = ThreadLocal.withInitial(() -> 0);
     private static final Pattern UNRESOLVED_NATIVE_PLACEHOLDER = Pattern.compile("\\{[A-Za-z0-9_.:-]+}");
     private static final Pattern UNRESOLVED_PAPI_PLACEHOLDER = Pattern.compile("%[^%\\s]+%");
+    private static final Pattern INTERNAL_PERCENT_PLACEHOLDER = Pattern.compile("%([^%{}\\s]+)%");
 
     public static final Set<String> missingPlaceholders = ConcurrentHashMap.newKeySet();
 
@@ -38,11 +41,14 @@ public final class PlaceholderManager {
         char[] a = s.toCharArray();
         boolean escape = false;
         for (char n : a) {
-            if (n == '\\' || escape) {
-                if (escape) {
-                    child.builder.append(n);
+            if (escape) {
+                if (n != '{' && n != '}') {
+                    child.builder.append('\\');
                 }
-                escape = !escape;
+                child.builder.append(n);
+                escape = false;
+            } else if (n == '\\') {
+                escape = true;
             } else if (n == '{') {
                 Child.setChild(child, new Child());
                 Child.setParent(child.child, child);
@@ -58,6 +64,9 @@ public final class PlaceholderManager {
             } else {
                 child.builder.append(n);
             }
+        }
+        if (escape) {
+            child.builder.append('\\');
         }
         return child.builder.toString();
     }
@@ -144,6 +153,7 @@ public final class PlaceholderManager {
 
     private static String replaceInternal(String text, ExtraData data, boolean quoted) {
         text = applySimplePlaceholders(text, data, false);
+        text = replaceInternalPercentPlaceholders(text, data, quoted);
         for (ParameterizedPlaceholder param : getParameterizedPlaceholder()) {
             text = extractString(text, found -> {
                 ExtraData dat = data;
@@ -181,7 +191,60 @@ public final class PlaceholderManager {
                 return null;
             });
         }
-        return applySimplePlaceholders(text, data, true);
+        text = applySimplePlaceholders(text, data, true);
+        return replaceInternalPercentPlaceholders(text, data, quoted);
+    }
+
+    private static String replaceInternalPercentPlaceholders(String text, ExtraData data, boolean quoted) {
+        if (text.indexOf('%') < 0) {
+            return text;
+        }
+
+        Matcher matcher = INTERNAL_PERCENT_PLACEHOLDER.matcher(text);
+        StringBuffer result = new StringBuffer(text.length());
+        while (matcher.find()) {
+            String found = matcher.group(1);
+            boolean viewerPlaceholder = found.startsWith("viewer_");
+            String name = viewerPlaceholder ? found.substring(7) : found;
+            String[] parts = name.split("_", 2);
+            String replacement = null;
+
+            if (parts.length == 2) {
+                ExtraData context = data;
+                if (viewerPlaceholder) {
+                    context = new ExtraData(data);
+                    Object viewer = context.get(ExtraData.DATA_VIEWER);
+                    if (viewer != null) {
+                        context.put(ExtraData.DATA_PLAYER, viewer);
+                    }
+                }
+                for (ParameterizedPlaceholder placeholder : PARAMETERIZED) {
+                    if (!(placeholder instanceof InternalParameterized)
+                            && !(placeholder instanceof PlayerParameterized)) {
+                        continue;
+                    }
+                    try {
+                        if (!placeholder.accept(parts[0])) {
+                            continue;
+                        }
+                        replacement = placeholder.provide(parts[0], parts[1], context);
+                        if (replacement != null) {
+                            if (quoted) {
+                                replacement = "'" + replacement.replace("\\", "\\\\").replace("'", "\\'") + "'";
+                            }
+                            break;
+                        }
+                    } catch (Throwable throwable) {
+                        Evaluator.onceError(throwable);
+                    }
+                }
+            }
+
+            matcher.appendReplacement(result, Matcher.quoteReplacement(
+                    replacement == null ? matcher.group() : replacement));
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 
     private static String applySimplePlaceholders(String text, ExtraData data, boolean repeatedPass) {

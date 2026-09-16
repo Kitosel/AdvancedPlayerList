@@ -32,6 +32,7 @@ import pl.kiosel.playerlist.placeholder.complex.RemoteComplex;
 import pl.kiosel.playerlist.placeholder.complex.TextComplex;
 import pl.kiosel.playerlist.placeholder.parameterized.CustomParameterized;
 import pl.kiosel.playerlist.placeholder.parameterized.InternalParameterized;
+import pl.kiosel.playerlist.placeholder.parameterized.PlayerParameterized;
 import pl.kiosel.playerlist.placeholder.simple.*;
 import pl.kiosel.playerlist.protocol.Protocol;
 import pl.kiosel.playerlist.protocol.ProtocolListener;
@@ -92,6 +93,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
     public void onPluginLoad() {
         instance = this;
         setDev(false);
+        useNMS(true);
     }
 
     @Override
@@ -148,6 +150,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
         PlaceholderManager.register(new FakeSimple(),
                 new InternalParameterized(),
+                new PlayerParameterized(),
                 new OverflowSimple(),
                 new ColorizerSimple());
         if (placeholderAPI) {
