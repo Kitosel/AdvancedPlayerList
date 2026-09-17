@@ -44,7 +44,7 @@ public final class TablistProfileManager {
 
 	public TablistProfileManager(AdvancedPlayerList plugin, RosaConfig settings,
 								 RosaConfig defaultHandler, RosaConfig defaultGlobal) {
-		this.plugin = Objects.requireNonNull(plugin, "plugin");
+		this.plugin = plugin;
 		this.settings = Objects.requireNonNull(settings, "settings");
 		this.defaultHandler = Objects.requireNonNull(defaultHandler, "defaultHandler");
 		this.defaultGlobal = Objects.requireNonNull(defaultGlobal, "defaultGlobal");

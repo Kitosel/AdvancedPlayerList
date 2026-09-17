@@ -89,6 +89,8 @@ public final class AdvancedPlayerList extends RosaPlugin {
     @Getter private ProtocolListener protocolListener;
     private boolean fullyStarted;
 
+    private Metrics metrics;
+
     @Override
     public void onPluginLoad() {
         instance = this;
@@ -98,7 +100,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
     @Override
     public void onPluginEnable() {
-        new Metrics(this, 33982);
+        this.metrics = new Metrics(this, 33982);
 
 		Diagnostics.clear();
 		placeholderAPI = true;
@@ -172,6 +174,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
     @Override
     public void onPluginDisable() {
+        this.metrics.shutdown();
         try {
 			if (tablistManager != null) {
 				tablistManager.setTablistEnabled(false);

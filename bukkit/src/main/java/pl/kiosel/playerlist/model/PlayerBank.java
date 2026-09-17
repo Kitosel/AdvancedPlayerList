@@ -18,6 +18,8 @@ import java.util.logging.Level;
 
 public final class PlayerBank {
 
+    private static final int FAKE_PLAYER_FORMAT_2 = -2;
+
     private final AdvancedPlayerList plugin;
     private final Map<String, FakePlayer> fakePlayers = new ConcurrentHashMap<>();
     private final String fakePlayersFile;
@@ -32,8 +34,12 @@ public final class PlayerBank {
     }
 
     public void createFakePlayer(String name) {
+        createFakePlayer(name, true);
+    }
+
+    public void createFakePlayer(String name, boolean renderHead) {
         if (name != null && !name.trim().isEmpty()) {
-            fakePlayers.putIfAbsent(normalize(name), new FakePlayer(name));
+            fakePlayers.putIfAbsent(normalize(name), new FakePlayer(name, renderHead));
         }
     }
 
@@ -71,13 +77,17 @@ public final class PlayerBank {
         DataInputStream data = new DataInputStream(input);
         fakePlayers.clear();
         int count = data.readInt();
+        boolean hasRenderHead = count == FAKE_PLAYER_FORMAT_2;
+        if (hasRenderHead) {
+            count = data.readInt();
+        }
         if (count < 0 || count > 100_000) {
             throw new IOException("Invalid fake player count: " + count);
         }
 
         for (int index = 0; index < count; index++) {
             String name = data.readUTF();
-            FakePlayer player = new FakePlayer(name);
+            FakePlayer player = new FakePlayer(name, !hasRenderHead || data.readBoolean());
             int placeholders = data.readInt();
             if (placeholders < 0 || placeholders > 100_000) {
                 throw new IOException("Invalid placeholder count: " + placeholders);
@@ -92,9 +102,11 @@ public final class PlayerBank {
     public void save(OutputStream output) throws IOException {
         DataOutputStream data = new DataOutputStream(output);
         List<FakePlayer> players = getFakePlayers();
+        data.writeInt(FAKE_PLAYER_FORMAT_2);
         data.writeInt(players.size());
         for (FakePlayer player : players) {
             data.writeUTF(player.getName());
+            data.writeBoolean(player.isRenderHead());
             Map<String, String> placeholders = new HashMap<>(player.placeholders());
             data.writeInt(placeholders.size());
             for (Map.Entry<String, String> entry : placeholders.entrySet()) {

@@ -42,6 +42,7 @@ public class SkinToolkit {
 
     private static final int CONNECT_TIMEOUT_MILLIS = 5_000;
     private static final int READ_TIMEOUT_MILLIS = 10_000;
+    private static final long MISSING_NAME_RETRY_MILLIS = 60_000L;
     private static final String USER_AGENT = "AdvancedPlayerList-Plugin";
     private static final Pattern MINECRAFT_NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
     private static final UUID EMPTY_UUID = new UUID(0L, 0L);
@@ -49,6 +50,7 @@ public class SkinToolkit {
     private static final SkinToolkit toolkit = new SkinToolkit();
 
     private final Map<String, AtomicReference<UUID>> nameToUuid = new ConcurrentHashMap<>();
+    private final Map<String, Long> missingNameRetryAt = new ConcurrentHashMap<>();
     private final Map<UUID, AtomicReference<Skin>> uuidToSkin = new ConcurrentHashMap<>();
     private final Map<String, AtomicReference<Skin>> dataToSkin = new ConcurrentHashMap<>();
     private volatile String mineSkinApiKey = "";
@@ -95,7 +97,7 @@ public class SkinToolkit {
                     output.write(buffer, 0, length);
                 }
                 if (responseCode < 200 || responseCode >= 300) {
-                    throw new IOException("HTTP " + responseCode + ": "
+                    throw new HttpResponseException(responseCode, "HTTP " + responseCode + ": "
                             + new String(output.toByteArray(), StandardCharsets.UTF_8));
                 }
                 return output.toByteArray();
@@ -127,6 +129,7 @@ public class SkinToolkit {
 
     public void clearCache() {
         nameToUuid.clear();
+        missingNameRetryAt.clear();
         uuidToSkin.clear();
         dataToSkin.clear();
     }
@@ -158,12 +161,22 @@ public class SkinToolkit {
             return null;
         }
 
-        Player online = Bukkit.getPlayer(name);
+        Player online = Bukkit.getPlayerExact(name);
         if (online != null) {
-            return getOnlineSkin(online, null);
+            Skin onlineSkin = getOnlineSkin(online, null);
+            if (onlineSkin != null) {
+                return onlineSkin;
+            }
         }
 
         String cacheKey = name.toLowerCase(Locale.ROOT);
+        Long retryAt = missingNameRetryAt.get(cacheKey);
+        if (retryAt != null) {
+            if (retryAt > System.currentTimeMillis()) {
+                return null;
+            }
+            missingNameRetryAt.remove(cacheKey, retryAt);
+        }
         AtomicReference<UUID> existing = nameToUuid.get(cacheKey);
         if (existing != null) {
             UUID uuid = existing.get();
@@ -181,9 +194,11 @@ public class SkinToolkit {
         skin.setKey(cacheKey);
         requestAccount(name, account -> {
             if (account.valid && account.uuid != null && !account.uuid.equals(new UUID(0L, 0L))) {
+                missingNameRetryAt.remove(cacheKey);
                 pending.set(account.uuid);
                 getSkinFromUniqueId(account.uuid, skin, false);
             } else {
+                missingNameRetryAt.put(cacheKey, System.currentTimeMillis() + MISSING_NAME_RETRY_MILLIS);
                 nameToUuid.remove(cacheKey, pending);
             }
         });
@@ -306,7 +321,10 @@ public class SkinToolkit {
                     account.name = object.optString("name", name);
                     account.valid = account.uuid != null && !account.uuid.equals(new UUID(0L, 0L));
                 } catch (Throwable exception) {
-                    logRequestFailure("account " + name, exception);
+                    if (!(exception instanceof HttpResponseException)
+                            || ((HttpResponseException) exception).status != 404) {
+                        logRequestFailure("account " + name, exception);
+                    }
                 }
                 callback.accept(account);
             });
@@ -422,5 +440,14 @@ public class SkinToolkit {
         output.flush();
         RosaLogger.getInstance().info("[SkinToolkit] Saved " + nameToUuid.size() + " UUIDs");
         RosaLogger.getInstance().info("[SkinToolkit] Saved " + (uuidToSkin.size() + dataToSkin.size()) + " skins");
+    }
+
+    private static final class HttpResponseException extends IOException {
+        private final int status;
+
+        private HttpResponseException(int status, String message) {
+            super(message);
+            this.status = status;
+        }
     }
 }

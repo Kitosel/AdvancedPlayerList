@@ -4,6 +4,7 @@ import pl.kiosel.playerlist.placeholder.PlaceholderManager;
 import pl.kiosel.playerlist.internal.SortOrder;
 import pl.kiosel.playerlist.model.Ticker;
 import pl.kiosel.playerlist.placeholder.ExtraData;
+import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.playerlist.model.Evaluator;
 import java.util.ArrayList;
 import pl.kiosel.playerlist.placeholder.ComplexSession;
@@ -187,7 +188,14 @@ public class BukkitListComplex<T> implements ComplexPlaceholder, Tickable, Compl
             if (object instanceof ExtraData) {
                 return (ExtraData)object;
             }
-            return BukkitListComplex.this.text.getCurrentData(this.viewer, BukkitListComplex.this.dataKey, object, BukkitListComplex.this.ping.getCurrent(), BukkitListComplex.this.skinUUID.getCurrent(), BukkitListComplex.this.opacity.getCurrent());
+            ExtraData data = BukkitListComplex.this.text.getCurrentData(this.viewer,
+                    BukkitListComplex.this.dataKey, object, BukkitListComplex.this.ping.getCurrent(),
+                    BukkitListComplex.this.skinUUID.getCurrent(), BukkitListComplex.this.opacity.getCurrent());
+            if (object instanceof FakePlayer) {
+                String configuredSkin = data.get(ExtraData.DATA_SKIN);
+                data.put(ExtraData.DATA_SKIN, ((FakePlayer) object).skinIdentifier(configuredSkin));
+            }
+            return data;
         }
         
         public void handle() {
