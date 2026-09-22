@@ -59,6 +59,9 @@ public final class Diagnostics {
         }
         if (plugin.getPlayerBank() == null) {
             problems.add("Fake-player storage is not initialized");
+        } else if (plugin.getPlayerBank().getUnavailableSkinLookupCount() > 0) {
+            problems.add("Fake-player skin accounts unavailable: "
+                    + plugin.getPlayerBank().getUnavailableSkinLookupCount());
         }
         if (plugin.getBridgeClient() != null
                 && plugin.getBridgeClient().isEnabled()

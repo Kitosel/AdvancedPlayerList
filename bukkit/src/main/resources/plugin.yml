@@ -37,6 +37,7 @@ permissions:
          advancedplayerlist.command.create: true
          advancedplayerlist.command.delete: true
          advancedplayerlist.command.edit: true
+         advancedplayerlist.command.refreshskin: true
          advancedplayerlist.command.list: true
 
    advancedplayerlist.command.main:
@@ -66,6 +67,8 @@ permissions:
    advancedplayerlist.command.delete:
       default: op
    advancedplayerlist.command.edit:
+      default: op
+   advancedplayerlist.command.refreshskin:
       default: op
    advancedplayerlist.command.list:
       default: op

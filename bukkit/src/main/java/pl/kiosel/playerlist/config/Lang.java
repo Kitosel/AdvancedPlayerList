@@ -36,6 +36,14 @@ public enum Lang implements MessageKey {
 	NOT_EXISTS("command.fakeplayer.not-exists"),
 	ADDED_PLACEHOLDER("command.fakeplayer.added-placeholder"),
 	REMOVED_PLACEHOLDER("command.fakeplayer.removed-placeholder"),
+	HEAD_UPDATED("command.fakeplayer.head-updated"),
+	SKIN_UPDATED("command.fakeplayer.skin-updated"),
+	SKIN_REFRESHING("command.fakeplayer.skin-refreshing"),
+	SKIN_REFRESHED("command.fakeplayer.skin-refreshed"),
+	SKIN_DISABLED("command.fakeplayer.skin-disabled"),
+	SKIN_NOT_FOUND("command.fakeplayer.skin-not-found"),
+	INVALID_SKIN("command.fakeplayer.invalid-skin"),
+	INVALID_BOOLEAN("command.fakeplayer.invalid-boolean"),
 	LIST("command.fakeplayer.list"),;
 
 	@Getter private final String path;

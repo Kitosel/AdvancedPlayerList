@@ -36,7 +36,7 @@ playerInfo:
     - '&aTime: &7%player_world_time_24%'
     - ''
     - '&7Time played: &a%statistic_time_played%'
-    - '&7Money: &a%vault_eco_balance_fixed%$'
+    - '&7Money: &a%economy_balance%$'
   skin: '%player_name%'
 
 serverInfo:

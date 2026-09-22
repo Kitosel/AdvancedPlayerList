@@ -41,7 +41,7 @@ public class DeleteSubCommand extends RosaSubCommand {
 
 	@Override
 	public void run(CommandSender sender, String[] args) {
-		if (args.length == 0 || args.length > 2) {
+		if (args.length != 1) {
 			sendUsage(sender);
 			return;
 		}
@@ -50,6 +50,7 @@ public class DeleteSubCommand extends RosaSubCommand {
 		if (this.plugin.getPlayerBank().deleteFakePlayer(name) == null) {
 			getMessage().sendPrefixed(sender, Lang.NOT_EXISTS, "name", name);
 		} else {
+			plugin.getPlayerBank().savePlayerBank();
 			getMessage().sendPrefixed(sender, Lang.REMOVED, "name", name);
 		}
 	}

@@ -134,6 +134,132 @@ public class SkinToolkit {
         dataToSkin.clear();
     }
 
+    public void invalidateSkin(String reference) {
+        if (reference == null) {
+            return;
+        }
+        String value = reference.trim();
+        if (value.isEmpty()) {
+            return;
+        }
+        if (MINECRAFT_NAME.matcher(value).matches()) {
+            String key = value.toLowerCase(Locale.ROOT);
+            AtomicReference<UUID> removed = nameToUuid.remove(key);
+            missingNameRetryAt.remove(key);
+            if (removed != null && removed.get() != null) {
+                uuidToSkin.remove(removed.get());
+            }
+            return;
+        }
+        UUID uuid = parseUniqueId(value);
+        if (uuid != null) {
+            uuidToSkin.remove(uuid);
+        } else {
+            dataToSkin.remove(value);
+        }
+    }
+
+    public boolean isValidSkinReference(String reference) {
+        if (reference == null) {
+            return false;
+        }
+        String value = reference.trim();
+        return "auto".equalsIgnoreCase(value)
+                || "none".equalsIgnoreCase(value)
+                || MINECRAFT_NAME.matcher(value).matches()
+                || parseUniqueId(value) != null
+                || isHttpUrl(value);
+    }
+
+    public void resolveUniqueId(String name, Consumer<UUID> callback) {
+        if (callback == null) {
+            return;
+        }
+        if (name == null || !MINECRAFT_NAME.matcher(name.trim()).matches()) {
+            callback.accept(null);
+            return;
+        }
+        String cleanName = name.trim();
+        Player online = Bukkit.getPlayerExact(cleanName);
+        if (online != null && online.getUniqueId().version() != 3) {
+            callback.accept(online.getUniqueId());
+            return;
+        }
+
+        String cacheKey = cleanName.toLowerCase(Locale.ROOT);
+        AtomicReference<UUID> existing = nameToUuid.get(cacheKey);
+        if (existing != null && existing.get() != null) {
+            callback.accept(existing.get());
+            return;
+        }
+        Long retryAt = missingNameRetryAt.get(cacheKey);
+        if (retryAt != null && retryAt > System.currentTimeMillis()) {
+            callback.accept(null);
+            return;
+        }
+
+        requestAccount(cleanName, account -> {
+            UUID uuid = account.valid ? account.uuid : null;
+            if (uuid == null || EMPTY_UUID.equals(uuid)) {
+                missingNameRetryAt.put(cacheKey, System.currentTimeMillis() + MISSING_NAME_RETRY_MILLIS);
+                callback.accept(null);
+                return;
+            }
+            missingNameRetryAt.remove(cacheKey);
+            nameToUuid.put(cacheKey, new AtomicReference<>(uuid));
+            callback.accept(uuid);
+        });
+    }
+
+    public int getCachedSkinCount() {
+        int count = 0;
+        for (AtomicReference<Skin> reference : uuidToSkin.values()) {
+            Skin skin = reference.get();
+            if (skin != null && skin.getTexture() != null) {
+                count++;
+            }
+        }
+        for (AtomicReference<Skin> reference : dataToSkin.values()) {
+            Skin skin = reference.get();
+            if (skin != null && skin.getTexture() != null) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int getPendingSkinCount() {
+        int count = 0;
+        for (AtomicReference<UUID> reference : nameToUuid.values()) {
+            if (reference.get() == null) {
+                count++;
+            }
+        }
+        for (AtomicReference<Skin> reference : uuidToSkin.values()) {
+            Skin skin = reference.get();
+            if (skin != null && skin.getTexture() == null) {
+                count++;
+            }
+        }
+        for (AtomicReference<Skin> reference : dataToSkin.values()) {
+            Skin skin = reference.get();
+            if (skin != null && skin.getTexture() == null) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int getUnavailableAccountCount() {
+        long now = System.currentTimeMillis();
+        for (Map.Entry<String, Long> entry : missingNameRetryAt.entrySet()) {
+            if (entry.getValue() <= now) {
+                missingNameRetryAt.remove(entry.getKey(), entry.getValue());
+            }
+        }
+        return missingNameRetryAt.size();
+    }
+
     protected UUID fixUniqueId(String value) {
         if (value == null) {
             return new UUID(0L, 0L);
@@ -149,6 +275,21 @@ public class SkinToolkit {
             return UUID.fromString(value);
         } catch (IllegalArgumentException ignored) {
             return new UUID(0L, 0L);
+        }
+    }
+
+    private UUID parseUniqueId(String value) {
+        UUID uuid = fixUniqueId(value);
+        return EMPTY_UUID.equals(uuid) ? null : uuid;
+    }
+
+    private boolean isHttpUrl(String value) {
+        try {
+            URL url = new URL(value);
+            return "http".equalsIgnoreCase(url.getProtocol())
+                    || "https".equalsIgnoreCase(url.getProtocol());
+        } catch (MalformedURLException ignored) {
+            return false;
         }
     }
 
@@ -271,13 +412,14 @@ public class SkinToolkit {
         if (value.isEmpty() || PlaceholderManager.containsUnresolvedPlaceholder(value)) {
             return null;
         }
-        if (value.length() <= 16) {
+        if (MINECRAFT_NAME.matcher(value).matches()) {
             return getSkinFromName(value);
         }
-        if (value.length() > 36) {
+        if (isHttpUrl(value)) {
             return getSkinFromURL(value);
         }
-        return getSkinFromUniqueId(fixUniqueId(value));
+        UUID uuid = parseUniqueId(value);
+        return uuid == null ? null : getSkinFromUniqueId(uuid);
     }
 
     public Skin getSkinFromURL(String url) {

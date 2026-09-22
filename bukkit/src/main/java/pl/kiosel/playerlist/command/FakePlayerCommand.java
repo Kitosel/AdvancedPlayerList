@@ -8,6 +8,7 @@ import pl.kiosel.playerlist.command.fakesubcommand.CreateSubCommand;
 import pl.kiosel.playerlist.command.fakesubcommand.DeleteSubCommand;
 import pl.kiosel.playerlist.command.fakesubcommand.EditSubCommand;
 import pl.kiosel.playerlist.command.fakesubcommand.ListSubCommand;
+import pl.kiosel.playerlist.command.fakesubcommand.RefreshSkinSubCommand;
 import org.bukkit.command.CommandSender;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.rosacore.command.RosaCommand;
@@ -22,6 +23,7 @@ public class FakePlayerCommand extends RosaCommand {
         addSubCommand(new CreateSubCommand(plugin));
         addSubCommand(new DeleteSubCommand(plugin));
         addSubCommand(new EditSubCommand(plugin));
+        addSubCommand(new RefreshSkinSubCommand(plugin));
         addSubCommand(new ListSubCommand(plugin));
     }
 

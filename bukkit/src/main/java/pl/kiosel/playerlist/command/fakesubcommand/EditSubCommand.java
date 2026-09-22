@@ -3,14 +3,11 @@ package pl.kiosel.playerlist.command.fakesubcommand;
 import org.bukkit.command.CommandSender;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.config.Lang;
+import pl.kiosel.playerlist.model.skin.SkinToolkit;
 import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.rosacore.command.RosaSubCommand;
-import pl.kiosel.rosacore.utils.CommandUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.StringJoiner;
+import java.util.*;
 
 public class EditSubCommand extends RosaSubCommand {
 
@@ -33,7 +30,8 @@ public class EditSubCommand extends RosaSubCommand {
 
 	@Override
 	public String getUsage() {
-		return "/fakeplayer edit <name> <setplaceholder/removeplaceholder> <placeholder> [value]";
+		return "/fakeplayer edit <name> <head <yes|no>|skin <auto|none|name|uuid|url>|"
+				+ "setplaceholder <placeholder> <value>|removeplaceholder <placeholder>>";
 	}
 
 	@Override
@@ -55,25 +53,81 @@ public class EditSubCommand extends RosaSubCommand {
 			return;
 		}
 
-		if (args.length > 1) {
-			if (args[1].equalsIgnoreCase("setplaceholder")) {
-				if (args.length > 3) {
-					String text = args[2];
-					String value = joinArguments(args, 3);
-					dp.placeholders().put(text, value);
-					getMessage().sendPrefixed(sender, Lang.ADDED_PLACEHOLDER, "text", text, "name", name, "value", value);
-					return;
-				}
-			} else if (args[1].equalsIgnoreCase("removeplaceholder")) {
-				if (args.length > 2) {
-					String text = args[2];
-					dp.placeholders().remove(text);
-					getMessage().sendPrefixed(sender, Lang.REMOVED_PLACEHOLDER, "text", text, "name", name);
-					return;
-				}
-			}
+		if (args.length < 2) {
+			sendUsage(sender);
+			return;
 		}
-		sender.sendMessage(getUsage());
+
+		String action = args[1].toLowerCase(Locale.ROOT);
+		switch (action) {
+			case "head": {
+				if (args.length != 3) {
+					sendUsage(sender);
+					return;
+				}
+				Boolean enabled = FakePlayerCommandSupport.parseEnabled(args[2]);
+				if (enabled == null) {
+					getMessage().sendPrefixed(sender, Lang.INVALID_BOOLEAN, "value", args[2]);
+					return;
+				}
+				dp.setRenderHead(enabled);
+				plugin.getPlayerBank().savePlayerBank();
+				getMessage().sendPrefixed(sender, Lang.HEAD_UPDATED,
+						"name", name, "head", enabled ? "enabled" : "disabled");
+				if (enabled) {
+					plugin.getPlayerBank().resolveSkin(dp, false, result ->
+							FakePlayerCommandSupport.reportLookupFailure(
+									getMessage(), sender, dp, result));
+				}
+				return;
+			}
+			case "skin": {
+				if (args.length != 3) {
+					sendUsage(sender);
+					return;
+				}
+				String skin = args[2];
+				if (!SkinToolkit.getDefaultToolkit().isValidSkinReference(skin)) {
+					getMessage().sendPrefixed(sender, Lang.INVALID_SKIN, "name", name, "skin", skin);
+					return;
+				}
+				dp.setSkinSource(skin);
+				plugin.getPlayerBank().savePlayerBank();
+				getMessage().sendPrefixed(sender, Lang.SKIN_UPDATED,
+						"name", name, "skin", dp.describeSkinSource());
+				plugin.getPlayerBank().resolveSkin(dp, true, result ->
+						FakePlayerCommandSupport.reportLookupFailure(
+								getMessage(), sender, dp, result));
+				return;
+			}
+			case "setplaceholder": {
+				if (args.length < 4) {
+					sendUsage(sender);
+					return;
+				}
+				String text = args[2];
+				String value = joinArguments(args, 3);
+				dp.placeholders().put(text, value);
+				plugin.getPlayerBank().savePlayerBank();
+				getMessage().sendPrefixed(sender, Lang.ADDED_PLACEHOLDER,
+						"text", text, "name", name, "value", value);
+				return;
+			}
+			case "removeplaceholder": {
+				if (args.length != 3) {
+					sendUsage(sender);
+					return;
+				}
+				String text = args[2];
+				dp.placeholders().remove(text);
+				plugin.getPlayerBank().savePlayerBank();
+				getMessage().sendPrefixed(sender, Lang.REMOVED_PLACEHOLDER,
+						"text", text, "name", name);
+				return;
+			}
+			default:
+				sendUsage(sender);
+		}
 	}
 
 	@Override
@@ -89,12 +143,22 @@ public class EditSubCommand extends RosaSubCommand {
 			return complete(args[0], names);
 		}
 		if (args.length == 2) {
-			return complete(args[1], "setplaceholder", "removeplaceholder");
+			return complete(args[1], Arrays.asList("setplaceholder", "removeplaceholder", "skin", "head"));
 		}
-		if (args.length == 3 && "removeplaceholder".equalsIgnoreCase(args[1])) {
-			FakePlayer player = plugin.getPlayerBank().getFakePlayer(args[0]);
-			if (player != null) {
-				return complete(args[2], new ArrayList<>(player.placeholders().keySet()));
+		if (args.length == 3) {
+			switch (args[1].toLowerCase(Locale.ROOT)) {
+				case "skin":
+					List<String> skins = new ArrayList<>(Arrays.asList("auto", "none"));
+					skins.addAll(onlinePlayers());
+					return complete(args[2], skins);
+				case "head":
+					return complete(args[2], Arrays.asList("enable", "disable"));
+				case "removeplaceholder":
+					FakePlayer player = plugin.getPlayerBank().getFakePlayer(args[0]);
+					if (player != null) {
+						return complete(args[2], new ArrayList<>(player.placeholders().keySet()));
+					}
+					break;
 			}
 		}
 		return EMPTY;

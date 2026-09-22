@@ -2,9 +2,12 @@ package pl.kiosel.playerlist.command.adminsubcommand;
 
 import org.bukkit.command.CommandSender;
 import pl.kiosel.playerlist.AdvancedPlayerList;
+import pl.kiosel.playerlist.bridge.BridgeClient;
 import pl.kiosel.playerlist.model.Diagnostics;
 import pl.kiosel.playerlist.model.Evaluator;
+import pl.kiosel.playerlist.model.skin.SkinToolkit;
 import pl.kiosel.playerlist.protocol.Protocol;
+import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.rosacore.command.RosaSubCommand;
 import pl.kiosel.rosacore.utils.ReflectionUtils;
 import pl.kiosel.rosacore.version.Version;
@@ -51,7 +54,31 @@ public class DiagSubCommand extends RosaSubCommand {
 
 		sendOptionalMessage(sender, "&fJava: &e" + ReflectionUtils.JAVA_VERSION);
 		sendOptionalMessage(sender, "&fPackets: &eRosaCore NMS");
+		sendOptionalMessage(sender, "&fNMS: &e" + Version.getServerRevisionVersion());
 		sendOptionalMessage(sender, "&fScripts: &e" + Evaluator.getEngineSource());
+		sendOptionalMessage(sender, "&fActive profile: &e" + plugin.getProfileManager().getActiveProfile());
+
+		int renderedHeads = 0;
+		for (FakePlayer player : plugin.getPlayerBank().getFakePlayers()) {
+			if (player.isRenderHead() && !"none".equalsIgnoreCase(player.getSkinSource())) {
+				renderedHeads++;
+			}
+		}
+		sendOptionalMessage(sender, "&fFake players: &e" + plugin.getPlayerBank().getFakePlayerCount()
+				+ " &7(heads: " + renderedHeads + ", storage v"
+				+ plugin.getPlayerBank().getStorageFormatVersion() + ")");
+
+		SkinToolkit skins = SkinToolkit.getDefaultToolkit();
+		sendOptionalMessage(sender, "&fSkins: &a" + skins.getCachedSkinCount() + " cached"
+				+ "&7, &e" + Math.max(skins.getPendingSkinCount(),
+				plugin.getPlayerBank().getPendingSkinLookupCount()) + " pending"
+				+ "&7, &c" + Math.max(skins.getUnavailableAccountCount(),
+				plugin.getPlayerBank().getUnavailableSkinLookupCount()) + " unavailable");
+
+		BridgeClient bridge = plugin.getBridgeClient();
+		String bridgeStatus = bridge == null || !bridge.isEnabled()
+				? "disabled" : bridge.isConnected() ? "connected" : "waiting";
+		sendOptionalMessage(sender, "&fBridge: &e" + bridgeStatus);
 
 		List<String> problems = Diagnostics.inspect(plugin);
 		if (problems.isEmpty()) {

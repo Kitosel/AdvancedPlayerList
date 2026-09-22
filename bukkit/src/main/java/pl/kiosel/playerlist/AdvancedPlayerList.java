@@ -45,7 +45,7 @@ import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.playerlist.util.Utils;
 import pl.kiosel.rosacore.RosaPlugin;
 import pl.kiosel.rosacore.config.RosaConfig;
-import pl.kiosel.rosacore.utils.Metrics;
+import pl.kiosel.rosacore.dependencies.nbtapi.utils.metrics.bukkit.Metrics;
 import pl.kiosel.rosacore.utils.ReflectionUtils;
 import pl.kiosel.rosacore.version.Version;
 

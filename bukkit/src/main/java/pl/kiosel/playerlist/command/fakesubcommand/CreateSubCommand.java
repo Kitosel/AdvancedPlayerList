@@ -3,11 +3,11 @@ package pl.kiosel.playerlist.command.fakesubcommand;
 import org.bukkit.command.CommandSender;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.config.Lang;
+import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.rosacore.command.RosaSubCommand;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 public class CreateSubCommand extends RosaSubCommand {
 
@@ -56,18 +56,24 @@ public class CreateSubCommand extends RosaSubCommand {
 		}
 		boolean renderHead = true;
 		if (args.length == 2) {
-			String arg1 = args[1].toLowerCase(Locale.ROOT);
-			if (arg1.equals("yes") || arg1.equals("true") || arg1.equals("y")) {
-				renderHead = true;
-			} else if (arg1.equals("no") || arg1.equals("false") || arg1.equals("n")) {
-				renderHead = false;
-			} else {
+			Boolean requested = FakePlayerCommandSupport.parseEnabled(args[1]);
+			if (requested == null) {
 				sendUsage(sender);
 				return;
 			}
+			renderHead = requested;
 		}
 		plugin.getPlayerBank().createFakePlayer(name, renderHead);
-		getMessage().sendPrefixed(sender, Lang.SPAWN);
+		FakePlayer player = plugin.getPlayerBank().getFakePlayer(name);
+		plugin.getPlayerBank().savePlayerBank();
+		getMessage().sendPrefixed(sender, Lang.SPAWN,
+				"name", name,
+				"head", renderHead ? "yes" : "no",
+				"skin", player == null ? "disabled" : player.describeSkinSource());
+		if (player != null) {
+			plugin.getPlayerBank().resolveSkin(player, false, result ->
+					FakePlayerCommandSupport.reportLookupFailure(getMessage(), sender, player, result));
+		}
 	}
 
 	@Override
