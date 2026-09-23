@@ -1,23 +1,26 @@
 package pl.kiosel.playerlist.listener;
 
+import pl.kiosel.playerlist.config.Lang;
 import pl.kiosel.playerlist.model.Ticker;
 import pl.kiosel.playerlist.tablist.Tablist;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import pl.kiosel.playerlist.AdvancedPlayerList;
+import pl.kiosel.rosacore.compatibility.ZSound;
+import pl.kiosel.rosacore.listener.RosaListener;
 
 import java.util.List;
 
-public class PlayerListener implements Listener {
+public class PlayerListener extends RosaListener {
 
     private final AdvancedPlayerList plugin;
 
     public PlayerListener(AdvancedPlayerList plugin) {
+        super(plugin);
         this.plugin = plugin;
     }
 
@@ -36,6 +39,16 @@ public class PlayerListener implements Listener {
                 plugin.getBridgeClient().requestUpdate();
             }
         }, 0L);
+
+        Ticker.delay(player, () -> {
+            if (plugin.getConfigFile().getBoolean("update-checker", true)) {
+                if (!plugin.getDescription().getVersion().equals(plugin.getNewPluginVersion())) {
+                    if (!player.isOp() || !player.hasPermission("advancedplayerlist.manage.plugin")) return;
+                    ZSound.ENTITY_PLAYER_LEVELUP.play(player, 0.5f, 2f);
+                    getMessage().message(Lang.UPDATE).with("version", plugin.getNewPluginVersion()).sendPrefixed(player);
+                }
+            }
+        }, 5*20L);
     }
 
     @EventHandler

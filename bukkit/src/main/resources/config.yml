@@ -9,6 +9,9 @@
 locale: en_US
 tablist-enabled: true
 
+# Checks if new version is available
+update-checker: true
+
 # Allow players to turn on and off tablist by its self
 player-can-toggle-tablist: true
 

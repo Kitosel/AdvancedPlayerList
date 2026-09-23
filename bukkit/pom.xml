@@ -7,7 +7,7 @@
     <parent>
         <groupId>pl.kiosel.playerlist</groupId>
         <artifactId>advancedplayerlist-parent</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.4</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -110,7 +110,6 @@
                                         <exclude>**/dependencies/hikari/**</exclude>
                                     </excludes>
                                 </filter>
-
                             </filters>
                             <relocations>
                                 <relocation>
@@ -146,7 +145,7 @@
         <dependency>
             <groupId>pl.kiosel.rosacore</groupId>
             <artifactId>rosacore-platform-bukkit</artifactId>
-			<version>0.2.2</version>
+			<version>0.2.3</version>
             <scope>compile</scope>
 			<exclusions>
 				<exclusion>
@@ -186,12 +185,7 @@
 			<version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
+
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>

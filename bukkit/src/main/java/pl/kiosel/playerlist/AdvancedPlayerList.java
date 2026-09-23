@@ -12,6 +12,7 @@ import pl.kiosel.playerlist.command.FakePlayerCommand;
 import pl.kiosel.playerlist.api.AdvancedPlayerListAPI;
 import pl.kiosel.playerlist.bridge.BridgeClient;
 import pl.kiosel.playerlist.config.ConfigFile;
+import pl.kiosel.playerlist.config.Lang;
 import pl.kiosel.playerlist.internal.ComplexParser;
 import pl.kiosel.playerlist.model.Diagnostics;
 import pl.kiosel.playerlist.model.Evaluator;
@@ -44,8 +45,9 @@ import pl.kiosel.playerlist.tablist.TablistManager;
 import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.playerlist.util.Utils;
 import pl.kiosel.rosacore.RosaPlugin;
+import pl.kiosel.rosacore.compatibility.ZSound;
 import pl.kiosel.rosacore.config.RosaConfig;
-import pl.kiosel.rosacore.dependencies.nbtapi.utils.metrics.bukkit.Metrics;
+import pl.kiosel.rosacore.dependencies.metrics.bukkit.Metrics;
 import pl.kiosel.rosacore.utils.ReflectionUtils;
 import pl.kiosel.rosacore.version.Version;
 
@@ -53,12 +55,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Level;
 
 public final class AdvancedPlayerList extends RosaPlugin {
@@ -100,8 +97,6 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
     @Override
     public void onPluginEnable() {
-        this.metrics = new Metrics(this, 33982);
-
 		Diagnostics.clear();
 		placeholderAPI = true;
 		fullyStarted = false;
@@ -131,6 +126,14 @@ public final class AdvancedPlayerList extends RosaPlugin {
             getHookManager().getEconomy().setPreferredHook(configFile.getString("economy"));
             economy = true;
         }
+        if (configFile.getBoolean("update-checker", true)) {
+            checkUpdates("advancedplayerlist", player -> {
+                if (!player.isOp() || !player.hasPermission("advancedplayerlist.manage.plugin")) return;
+                ZSound.ENTITY_PLAYER_LEVELUP.play(player, 0.5f, 2f);
+                getMessages().message(Lang.UPDATE).with("version", getNewPluginVersion()).sendPrefixed(player);
+            });
+        }
+        metrics = new Metrics(this, 33982);
 
         playerBank = new PlayerBank(this);
         tablistManager = new TablistManager(this);

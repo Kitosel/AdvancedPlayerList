@@ -1,4 +1,7 @@
 prefix: "&8[&dAdvanced&bPlayerList&8]"
+
+new-version: "&7New plugin version available &e%version%"
+
 command:
   toggle-enable: "&aEnabled &7tablist for you."
   toggle-disable: "&cDisabled &7tablist for you."

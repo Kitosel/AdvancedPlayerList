@@ -5,6 +5,8 @@ import pl.kiosel.rosacore.message.MessageKey;
 
 public enum Lang implements MessageKey {
 
+	UPDATE("new-version"),
+
 	TABLIST_ENABLE("command.admin.tablist-enable"),
 	TABLIST_DISABLE("command.admin.tablist-disable"),
 	TABLIST_ALREADY_ENABLED("command.admin.tablist-already-enabled"),
