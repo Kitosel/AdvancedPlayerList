@@ -41,13 +41,15 @@ public class PlayerListener extends RosaListener {
         }, 0L);
 
         Ticker.delay(player, () -> {
-            if (plugin.getConfigFile().getBoolean("update-checker", true)) {
-                if (!plugin.getDescription().getVersion().equals(plugin.getNewPluginVersion())) {
-                    if (!player.isOp() || !player.hasPermission("advancedplayerlist.manage.plugin")) return;
-                    ZSound.ENTITY_PLAYER_LEVELUP.play(player, 0.5f, 2f);
-                    getMessage().message(Lang.UPDATE).with("version", plugin.getNewPluginVersion()).sendPrefixed(player);
-                }
-            }
+            if (!plugin.getConfigFile().getBoolean("update-checker", true)) return;
+
+            String newVersion = plugin.getNewPluginVersion();
+            if (newVersion == null || plugin.getDescription().getVersion().equals(newVersion)) return;
+
+            if (!player.isOp() && !player.hasPermission("advancedplayerlist.manage.plugin")) return;
+
+            ZSound.ENTITY_PLAYER_LEVELUP.play(player, 0.5f, 2f);
+            getMessage().message(Lang.UPDATE).with("version", newVersion).sendPrefixed(player);
         }, 5*20L);
     }
 

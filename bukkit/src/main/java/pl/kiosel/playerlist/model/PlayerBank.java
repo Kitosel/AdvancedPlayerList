@@ -3,6 +3,8 @@ package pl.kiosel.playerlist.model;
 import org.bukkit.Bukkit;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.config.ConfigFile;
+import pl.kiosel.playerlist.event.FakePlayerCreateEvent;
+import pl.kiosel.playerlist.event.FakePlayerRemoveEvent;
 import pl.kiosel.playerlist.model.skin.SkinToolkit;
 import pl.kiosel.playerlist.util.FakePlayer;
 
@@ -53,7 +55,14 @@ public final class PlayerBank {
 
     public void createFakePlayer(String name, boolean renderHead) {
         if (name != null && !name.trim().isEmpty()) {
-            fakePlayers.putIfAbsent(normalize(name), new FakePlayer(name, renderHead));
+            FakePlayer fakePlayer = new FakePlayer(name, renderHead);
+
+            FakePlayerCreateEvent event = new FakePlayerCreateEvent(fakePlayer);
+            Bukkit.getPluginManager().callEvent(event);
+            if (event.isCancelled()) {
+                return;
+            }
+            fakePlayers.putIfAbsent(normalize(name), fakePlayer);
         }
     }
 
@@ -64,6 +73,12 @@ public final class PlayerBank {
         String key = normalize(name);
         removeLookupState(pendingSkinLookups, key);
         removeLookupState(unavailableSkinLookups, key);
+
+        FakePlayerRemoveEvent event = new FakePlayerRemoveEvent(getFakePlayer(name));
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return null;
+        }
         return fakePlayers.remove(key);
     }
 
@@ -134,8 +149,8 @@ public final class PlayerBank {
             String name = data.readUTF();
             boolean renderHead = format < 2 || data.readBoolean();
             String skinSource = format >= 3 && data.readBoolean() ? data.readUTF() : null;
-            UUID onlineUniqueId = format >= 3 && data.readBoolean()
-                    ? new UUID(data.readLong(), data.readLong()) : null;
+            UUID onlineUniqueId = format >= 3 && data.readBoolean() ? new UUID(data.readLong(), data.readLong()) : null;
+
             FakePlayer player = new FakePlayer(name, renderHead, skinSource, onlineUniqueId);
             int placeholders = data.readInt();
             if (placeholders < 0 || placeholders > 100_000) {
@@ -230,8 +245,7 @@ public final class PlayerBank {
         SkinToolkit toolkit = SkinToolkit.getDefaultToolkit();
         boolean automatic = source == null;
         String reference = automatic ? player.getName() : source;
-        String lookupKey = normalize(player.getName()) + "|"
-                + (reference == null ? "" : reference.toLowerCase(Locale.ROOT));
+        String lookupKey = normalize(player.getName()) + "|" + reference.toLowerCase(Locale.ROOT);
         if (force) {
             toolkit.invalidateSkin(reference);
             if (automatic && player.getOnlineUniqueId() != null) {
@@ -246,7 +260,7 @@ public final class PlayerBank {
             return;
         }
 
-        if (reference != null && reference.length() <= 16) {
+        if (reference.length() <= 16) {
             if (!pendingSkinLookups.add(lookupKey)) {
                 result.accept(SkinLookupResult.PENDING);
                 return;

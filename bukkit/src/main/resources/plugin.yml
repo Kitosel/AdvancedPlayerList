@@ -4,6 +4,8 @@ author: Kiosel
 main: pl.kiosel.playerlist.AdvancedPlayerList
 folia-supported: true
 
+api-version: '1.13'
+
 libraries:
    - org.openjdk.nashorn:nashorn-core:15.6
 

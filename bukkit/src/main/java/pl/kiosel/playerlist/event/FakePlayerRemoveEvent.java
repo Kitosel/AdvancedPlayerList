@@ -1,6 +1,5 @@
 package pl.kiosel.playerlist.event;
 
-import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import pl.kiosel.playerlist.util.FakePlayer;
 
@@ -8,8 +7,8 @@ public class FakePlayerRemoveEvent extends FakePlayerEvent implements Cancellabl
 
 	private boolean cancelled;
 
-	public FakePlayerRemoveEvent(FakePlayer fakePlayer, Player player) {
-		super(fakePlayer, player);
+	public FakePlayerRemoveEvent(FakePlayer fakePlayer) {
+		super(fakePlayer);
 	}
 
 	@Override

@@ -12,7 +12,6 @@ import pl.kiosel.playerlist.command.FakePlayerCommand;
 import pl.kiosel.playerlist.api.AdvancedPlayerListAPI;
 import pl.kiosel.playerlist.bridge.BridgeClient;
 import pl.kiosel.playerlist.config.ConfigFile;
-import pl.kiosel.playerlist.config.Lang;
 import pl.kiosel.playerlist.internal.ComplexParser;
 import pl.kiosel.playerlist.model.Diagnostics;
 import pl.kiosel.playerlist.model.Evaluator;
@@ -45,7 +44,6 @@ import pl.kiosel.playerlist.tablist.TablistManager;
 import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.playerlist.util.Utils;
 import pl.kiosel.rosacore.RosaPlugin;
-import pl.kiosel.rosacore.compatibility.ZSound;
 import pl.kiosel.rosacore.config.RosaConfig;
 import pl.kiosel.rosacore.dependencies.metrics.bukkit.Metrics;
 import pl.kiosel.rosacore.utils.ReflectionUtils;
@@ -91,7 +89,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
     @Override
     public void onPluginLoad() {
         instance = this;
-        setDev(false);
+        setDev(true);
         useNMS(true);
     }
 
@@ -101,6 +99,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
 		placeholderAPI = true;
 		fullyStarted = false;
         worldConfigFiles.clear();
+
         configFile = loadConfig(ConfigFile.CONFIG.getPath());
         handlerFile = loadConfig(ConfigFile.HANDLER.getPath());
         globalFile = loadConfig(ConfigFile.GLOBAL.getPath());
@@ -127,11 +126,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
             economy = true;
         }
         if (configFile.getBoolean("update-checker", true)) {
-            checkUpdates("advancedplayerlist", player -> {
-                if (!player.isOp() || !player.hasPermission("advancedplayerlist.manage.plugin")) return;
-                ZSound.ENTITY_PLAYER_LEVELUP.play(player, 0.5f, 2f);
-                getMessages().message(Lang.UPDATE).with("version", getNewPluginVersion()).sendPrefixed(player);
-            });
+            checkUpdates("advancedplayerlist");
         }
         metrics = new Metrics(this, 33982);
 
