@@ -3,6 +3,8 @@ package pl.kiosel.playerlist.tablist;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+import pl.kiosel.playerlist.AdvancedPlayerList;
+import pl.kiosel.playerlist.config.Settings;
 import pl.kiosel.playerlist.internal.LineData;
 import pl.kiosel.playerlist.internal.UUIDSet;
 import pl.kiosel.playerlist.model.Ticker;
@@ -21,12 +23,14 @@ public final class TablistHandler {
 
     private static final int PLAYER_REMOVAL_DELAY_TICKS = 5;
 
+    private final AdvancedPlayerList plugin;
     private final Map<UUID, Integer> removeQueue = new ConcurrentHashMap<>();
     private final Tablist tablist;
     private volatile boolean quickUpdate;
 
-    TablistHandler(Tablist tablist) {
+    TablistHandler(Tablist tablist, AdvancedPlayerList plugin) {
         this.tablist = tablist;
+        this.plugin  = plugin;
     }
 
     public void clear() {
@@ -57,7 +61,7 @@ public final class TablistHandler {
             return;
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (viewer == player || viewer.canSee(player)) {
+            if (viewer == player || viewer.canSee(player) || !plugin.getIntegrationManager().isVanished(player)) {
                 nativeTabList.showRealPlayer(player);
             }
         }
@@ -80,6 +84,8 @@ public final class TablistHandler {
     }
 
     public void tick() {
+        if (!plugin.getSettings().get(Settings.TABLIST_WITH_COLUMNS)) return;
+
         processRemoveQueue();
         if (!quickUpdate && !Ticker.optimize()) {
             return;
@@ -124,6 +130,7 @@ public final class TablistHandler {
     private void updateLayout(TablistLayout layout) {
         int lineCount = Math.min(Math.min(layout.getSize(), 80), tablist.lines.length);
         int linesPerColumn = Math.max(1, TablistLayout.lines(layout.getSize()));
+
         boolean[] hideEmptyColumn = calculateConfiguredEmptyColumns(layout, lineCount, linesPerColumn);
         boolean[] contentEmptyColumn = calculateContentEmptyColumns(layout, lineCount, linesPerColumn);
 
@@ -140,13 +147,13 @@ public final class TablistHandler {
             applyLineData(line, data);
 
             int column = Math.min(hideEmptyColumn.length - 1, index / linesPerColumn);
-            if (!line.getUnsafe().dirty() && contentEmptyColumn[column] && hideEmptyColumn[column]) {
+            if (!line.getPlayer().dirty() && contentEmptyColumn[column] && hideEmptyColumn[column]) {
                 line.hide();
             } else {
                 line.show();
             }
 
-            TabListCell nextCell = line.getUnsafe().toCell(line.isShown());
+            TabListCell nextCell = line.getPlayer().toCell(line.isShown());
             if (!Objects.equals(nativeTabList.getCell(index), nextCell)) {
                 nativeTabList.setCell(index, nextCell);
                 changed = true;

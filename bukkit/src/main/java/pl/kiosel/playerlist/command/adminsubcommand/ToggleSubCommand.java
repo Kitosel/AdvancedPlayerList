@@ -4,6 +4,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.config.Lang;
+import pl.kiosel.playerlist.config.Settings;
 import pl.kiosel.rosacore.command.RosaSubCommand;
 
 public class ToggleSubCommand extends RosaSubCommand {
@@ -42,7 +43,7 @@ public class ToggleSubCommand extends RosaSubCommand {
 
 	@Override
 	public boolean isAvailable(CommandSender sender) {
-		return plugin.getConfigFile().getBoolean("player-can-toggle-tablist");
+		return plugin.getSettings().get(Settings.PLAYER_TOGGLE_TABLIST);
 	}
 
 	@Override

@@ -6,7 +6,7 @@
 
     <groupId>pl.kiosel.playerlist</groupId>
     <artifactId>advancedplayerlist-parent</artifactId>
-    <version>1.2.5</version>
+    <version>1.3.0</version>
     <packaging>pom</packaging>
 
     <name>AdvancedPlayerList</name>
@@ -116,6 +116,17 @@
         <repository>
             <id>placeholderapi</id>
             <url>https://repo.helpch.at/releases/</url>
+        </repository>
+
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
+        <repository>
+            <id>essentialsx-releases</id>
+            <name>EssentialsX API Repository</name>
+            <url>https://repo.essentialsx.net/releases</url>
         </repository>
     </repositories>
 </project>

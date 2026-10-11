@@ -29,14 +29,13 @@ public final class ProtocolListener {
 
     private final AdvancedPlayerList plugin;
     private final TabPacketInterceptor tabPackets;
-    private final ServerStatusInterceptor serverStatus;
-    private final Map<UUID, TabPacketInterceptor.Subscription> subscriptions = new ConcurrentHashMap<>();
+	private final Map<UUID, TabPacketInterceptor.Subscription> subscriptions = new ConcurrentHashMap<>();
     private ServerStatusInterceptor.Subscription statusSubscription;
 
     public ProtocolListener(AdvancedPlayerList plugin) {
         this.plugin = plugin;
         this.tabPackets = plugin.getNMS().getTabPacketInterceptor();
-        this.serverStatus = plugin.getNMS().getServerStatusInterceptor();
+		ServerStatusInterceptor serverStatus = plugin.getNMS().getServerStatusInterceptor();
         try {
             this.statusSubscription = serverStatus.subscribe(this::onServerStatus);
         } catch (RuntimeException exception) {

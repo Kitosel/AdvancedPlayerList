@@ -39,7 +39,7 @@ public final class BridgeClient implements PluginMessageListener, Runnable, Auto
     private volatile boolean enabled;
     private volatile String channel;
     private volatile int updateInterval = 40;
-    private volatile int elapsedTicks;
+    private int elapsedTicks;
     private volatile long lastStateAt;
 
     public BridgeClient(AdvancedPlayerList plugin) {

@@ -3,7 +3,13 @@
 # Built-in player/world/server placeholders also accept percent signs.
 # Other %...% placeholders require PlaceholderAPI.
 
+# Size of the tablist
+# 20 - 1 column
+# 40 - 2 columns
+# 60 - 3 columns
+# 80 - 4 columns
 size: 80
+
 defaultSkin: krep
 defaultPing: 1000
 
@@ -31,6 +37,16 @@ columns:
       - ''
       - text: '{playerInformation}'
         amount: -1
+
+# Used only when `tablist-with-columns` is set to `false`.
+# It changes the normal Minecraft entries of real online players; no fake slots
+# or columns are created. `%player_*%` and PlaceholderAPI variables refer to
+# the player shown on this line. Set `format-no-columns` to false to leave
+# vanilla player names untouched.
+player-list:
+  format-no-columns: true
+  format: '&8[&a%luckperms_prefix%&8] &f%player_name% &a%economy_balance%$ &8• &7%player_ping%ms'
+  refreshTicks: 20
 
 header:
   refreshTicks: 10

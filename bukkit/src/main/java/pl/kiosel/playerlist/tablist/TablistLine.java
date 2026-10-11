@@ -16,7 +16,7 @@ import pl.kiosel.rosacore.nms.api.tablist.TabListSkin;
 public class TablistLine {
 
     @Getter
-	private final ProtocolPlayer unsafe;
+	private final ProtocolPlayer player;
     private Skin skin;
     private GameMode mode;
     boolean updateName;
@@ -31,7 +31,7 @@ public class TablistLine {
 	boolean shown;
     
     TablistLine(Tablist tablist, int index) {
-        this.unsafe = new ProtocolPlayer(tablist, index);
+        this.player = new ProtocolPlayer(tablist, index);
     }
     
     public void setGameMode(GameMode mode) {
@@ -46,7 +46,7 @@ public class TablistLine {
         mode = event.getGameMode();
         this.mode = mode;
         this.updateGameMode = true;
-        this.unsafe.setGameMode(mode);
+        this.player.setGameMode(mode);
     }
 
 	public void show() {
@@ -64,7 +64,7 @@ public class TablistLine {
     }
 
 	public void setPing(int ping) {
-        if (Objects.equals(ping, this.unsafe.getLatency())) {
+        if (Objects.equals(ping, this.player.getLatency())) {
             return;
         }
         TablistLinePingChangeEvent event = new TablistLinePingChangeEvent(this, ping);
@@ -74,7 +74,7 @@ public class TablistLine {
         }
         ping = event.getPing();
         this.updatePing = true;
-        this.unsafe.setPing(ping);
+        this.player.setPing(ping);
     }
     
     public void setSkin(Skin skin) {
@@ -92,7 +92,7 @@ public class TablistLine {
             this.updateSkin = true;
             this.skin = null;
             this.skinDone = false;
-            this.unsafe.setSkin(null);
+            this.player.setSkin(null);
             return;
         }
         if (Objects.equals(skin, this.skin)) {
@@ -109,7 +109,7 @@ public class TablistLine {
             return;
         }
         if (this.skin != null && this.skin.getTexture() != null) {
-            this.unsafe.setSkin(TabListSkin.of(
+            this.player.setSkin(TabListSkin.of(
                     this.skin.getTexture().getValue(),
                     this.skin.getTexture().getSignature()));
             this.updateSkin = true;
@@ -121,7 +121,7 @@ public class TablistLine {
         if (display == null || display.trim().isEmpty()) {
             display = "";
         }
-        if (Objects.equals(display, this.unsafe.getDisplayName())) {
+        if (Objects.equals(display, this.player.getDisplayName())) {
             return;
         }
         TablistLineTextChangeEvent event = new TablistLineTextChangeEvent(this, display);
@@ -131,7 +131,7 @@ public class TablistLine {
         }
         display = event.getText();
         this.updateName = true;
-        this.unsafe.setDisplayName(display);
+        this.player.setDisplayName(display);
     }
 
     void resetUpdateFlags() {

@@ -12,7 +12,6 @@ import org.bukkit.Bukkit;
 import pl.kiosel.playerlist.event.TablistFooterChangeEvent;
 import pl.kiosel.playerlist.placeholder.ExtraData;
 import org.bukkit.GameMode;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.entity.Player;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.rosacore.nms.api.tablist.TabList;
@@ -22,7 +21,7 @@ public class Tablist implements Tickable {
     @Getter private final Player player;
     @Getter private final TablistHandler handler;
     @Getter private TablistLayout layout;
-    @Getter private final Plugin plugin;
+    @Getter private final AdvancedPlayerList plugin;
     @Getter private String header;
     @Getter private String footer;
     @Getter @Setter private TablistLayoutHandler layoutHandler;
@@ -35,12 +34,12 @@ public class Tablist implements Tickable {
     protected TablistLine[] lines;
     private GameMode mode;
     
-    public Tablist(Player player, Plugin plugin) {
+    public Tablist(Player player, AdvancedPlayerList plugin) {
         this.lines = new TablistLine[0];
         this.player = player;
         this.offlinePlayer = (player.getUniqueId().version() == 3);
         this.plugin = plugin;
-        this.handler = new TablistHandler(this);
+        this.handler = new TablistHandler(this, plugin);
         this.mode = player.getGameMode();
     }
 
@@ -76,6 +75,10 @@ public class Tablist implements Tickable {
     
     @Override
     public void run() {
+        VanillaPlayerListFormatter formatter = plugin.getVanillaPlayerListFormatter();
+        if (formatter != null) {
+            formatter.update(player, false);
+        }
         if (this.handler != null) {
             this.handler.tick();
         }
@@ -140,6 +143,7 @@ public class Tablist implements Tickable {
         Bukkit.getPluginManager().callEvent(thce);
         TablistFooterChangeEvent tfce = new TablistFooterChangeEvent(this, footer);
         Bukkit.getPluginManager().callEvent(tfce);
+
         boolean a = thce.isCancelled();
         boolean b = tfce.isCancelled();
         if (a && b) {
@@ -168,10 +172,6 @@ public class Tablist implements Tickable {
         updateLayout();
     }
 
-	protected void updatePlayer() {
-        this.handler.quickUpdate();
-    }
-    
     public void start() {
         AdvancedPlayerList owner = AdvancedPlayerList.getInstance();
         if (owner == null) {
@@ -179,8 +179,15 @@ public class Tablist implements Tickable {
         }
         this.nativeTabList = owner.getNMS().getTabListService().create(player);
         this.nativeTabList.setHeaderFooter(header, footer);
+
+        VanillaPlayerListFormatter formatter = plugin.getVanillaPlayerListFormatter();
+        if (formatter != null) {
+            formatter.update(player, true);
+        }
+
         Ticker.register(player, this);
         this.handler.addPlayers();
+
         setEnabled(true);
         this.handler.quickUpdate();
         this.handler.tick();
@@ -189,6 +196,10 @@ public class Tablist implements Tickable {
     public void stop() {
         unregisterTask();
         this.handler.clear();
+        VanillaPlayerListFormatter formatter = plugin.getVanillaPlayerListFormatter();
+        if (formatter != null) {
+            formatter.restore(player);
+        }
         if (nativeTabList != null) {
             nativeTabList.clear();
             nativeTabList = null;
@@ -230,6 +241,7 @@ public class Tablist implements Tickable {
         if (nativeTabList == null) return;
         if (header == null || header.isEmpty()) return;
         if (footer == null || footer.isEmpty()) return;
+
         nativeTabList.setHeaderFooter(header, footer);
         nativeTabList.sendHeaderFooter();
     }

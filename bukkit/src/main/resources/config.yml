@@ -12,6 +12,9 @@ tablist-enabled: true
 # Checks if new version is available
 update-checker: true
 
+# Should the table have columns, or can it be a simple tablist with only a header, and a footer?
+tablist-with-columns: true
+
 # Allow players to turn on and off tablist by its self
 player-can-toggle-tablist: true
 

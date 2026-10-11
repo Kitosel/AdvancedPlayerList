@@ -185,6 +185,7 @@ public final class Ticker implements Runnable {
                 1L,
                 1L);
         reference.set(scheduled);
+
         RosaTask previous = ENTITY_TASKS.put(task, scheduled);
         if (previous != null) {
             previous.cancel();

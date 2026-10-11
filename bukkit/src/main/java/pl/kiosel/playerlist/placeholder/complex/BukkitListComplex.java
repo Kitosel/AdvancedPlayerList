@@ -200,7 +200,10 @@ public class BukkitListComplex<T> implements ComplexPlaceholder, Tickable, Compl
         
         public void handle() {
             if (BukkitListComplex.this.sort != null) {
-                this.objects = SortOrder.order(BukkitListComplex.this.order.getCurrent()).sort(this.viewer, BukkitListComplex.this.sort.getCurrent(), BukkitListComplex.this.dataKey, this.objects);
+                this.objects = SortOrder.order(
+                        BukkitListComplex.this.order.getCurrent()).sort(
+                                this.viewer, BukkitListComplex.this.sort.getCurrent(),
+                                BukkitListComplex.this.dataKey, this.objects);
             }
         }
         

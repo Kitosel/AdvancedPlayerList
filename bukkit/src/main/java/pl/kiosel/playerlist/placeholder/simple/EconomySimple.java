@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.placeholder.ExtraData;
 import pl.kiosel.playerlist.placeholder.SimplePlaceholder;
+import pl.kiosel.rosacore.utils.NumberUtils;
 
 public class EconomySimple implements SimplePlaceholder {
 
@@ -22,9 +23,14 @@ public class EconomySimple implements SimplePlaceholder {
 		Object dataPlayer = data.get(ExtraData.DATA_PLAYER);
 		if (dataPlayer instanceof Player) {
 			Player player = (Player) dataPlayer;
-			text = replaceToken(text, "economy_balance", String.valueOf(plugin.getHookManager().getEconomy().getBalance(player)));
+			text = replaceToken(text, "economy_balance", getEconomyBalanceWithPrecision(player));
 		}
 		return text;
+	}
+
+	private String getEconomyBalanceWithPrecision(Player player) {
+		double balance = plugin.getHookManager().getEconomy().getBalance(player);
+		return String.valueOf(NumberUtils.formatNumber(balance, 2));
 	}
 
 	@Override

@@ -12,6 +12,8 @@ import pl.kiosel.playerlist.command.FakePlayerCommand;
 import pl.kiosel.playerlist.api.AdvancedPlayerListAPI;
 import pl.kiosel.playerlist.bridge.BridgeClient;
 import pl.kiosel.playerlist.config.ConfigFile;
+import pl.kiosel.playerlist.config.Settings;
+import pl.kiosel.playerlist.integration.IntegrationManager;
 import pl.kiosel.playerlist.internal.ComplexParser;
 import pl.kiosel.playerlist.model.Diagnostics;
 import pl.kiosel.playerlist.model.Evaluator;
@@ -41,11 +43,14 @@ import pl.kiosel.playerlist.model.skin.SkinToolkit;
 import pl.kiosel.playerlist.tablist.TablistDisplay;
 import pl.kiosel.playerlist.tablist.TablistLayout;
 import pl.kiosel.playerlist.tablist.TablistManager;
+import pl.kiosel.playerlist.tablist.VanillaPlayerListFormatter;
 import pl.kiosel.playerlist.util.FakePlayer;
 import pl.kiosel.playerlist.util.Utils;
 import pl.kiosel.rosacore.RosaPlugin;
 import pl.kiosel.rosacore.config.RosaConfig;
+import pl.kiosel.rosacore.config.setting.RosaSettings;
 import pl.kiosel.rosacore.dependencies.metrics.bukkit.Metrics;
+import pl.kiosel.rosacore.hook.economy.EconomyManager;
 import pl.kiosel.rosacore.utils.ReflectionUtils;
 import pl.kiosel.rosacore.version.Version;
 
@@ -63,15 +68,19 @@ public final class AdvancedPlayerList extends RosaPlugin {
     @Getter private RosaConfig configFile;
     @Getter private RosaConfig handlerFile;
     @Getter private RosaConfig globalFile;
+    @Getter private RosaSettings settings;
 
     private final Map<String, RosaConfig> worldConfigFiles = new LinkedHashMap<>();
     @Getter private final Map<World, TablistLayout> layouts = new HashMap<>();
     @Getter private final Map<World, TablistDisplay> displays = new HashMap<>();
     @Getter private TablistManager tablistManager;
+    @Getter private VanillaPlayerListFormatter vanillaPlayerListFormatter;
     @Getter private InternalLayoutHandler layoutHandler;
     @Getter private AdvancedPlayerListAPI api;
 	@Getter private TablistProfileManager profileManager;
     @Getter private BridgeClient bridgeClient;
+
+    @Getter private IntegrationManager integrationManager;
 
     public TablistDisplay globalDisplay;
     public TablistLayout globalLayout;
@@ -89,12 +98,13 @@ public final class AdvancedPlayerList extends RosaPlugin {
     @Override
     public void onPluginLoad() {
         instance = this;
-        setDev(true);
+        setDev(false);
         useNMS(true);
     }
 
     @Override
     public void onPluginEnable() {
+        getHookManager().start();
 		Diagnostics.clear();
 		placeholderAPI = true;
 		fullyStarted = false;
@@ -103,13 +113,12 @@ public final class AdvancedPlayerList extends RosaPlugin {
         configFile = loadConfig(ConfigFile.CONFIG.getPath());
         handlerFile = loadConfig(ConfigFile.HANDLER.getPath());
         globalFile = loadConfig(ConfigFile.GLOBAL.getPath());
+        settings = loadSettings(configFile, Settings.SCHEMA);
+
 		profileManager = new TablistProfileManager(this, configFile, handlerFile, globalFile);
 		profileManager.reloadSelection();
 
-        setLocale(configFile.getString("locale"));
-
         if (!Evaluator.initialize()) {
-            Utils.sendEngineMessage();
             emergencyStop();
             return;
         }
@@ -121,17 +130,18 @@ public final class AdvancedPlayerList extends RosaPlugin {
                 + "&f, Java " + ReflectionUtils.JAVA_VERSION
                 + "&f, scripts: " + Evaluator.getEngineSource());
 
-        if (getHookManager().getEconomy().isAvailable(configFile.getString("economy"))) {
-            getHookManager().getEconomy().setPreferredHook(configFile.getString("economy"));
-            economy = true;
-        }
-        if (configFile.getBoolean("update-checker", true)) {
+        settings.writeMissingDefaults();
+
+        setLocale(settings.get(Settings.LOCALE));
+
+        if (settings.get(Settings.UPDATE_CHECKER)) {
             checkUpdates("advancedplayerlist");
         }
         metrics = new Metrics(this, 33982);
 
         playerBank = new PlayerBank(this);
         tablistManager = new TablistManager(this);
+        vanillaPlayerListFormatter = new VanillaPlayerListFormatter(this);
         layoutHandler = new InternalLayoutHandler(null);
         offlinePlayerDatabase = new OfflinePlayerDatabase();
         bridgeClient = new BridgeClient(this);
@@ -156,8 +166,6 @@ public final class AdvancedPlayerList extends RosaPlugin {
         if (placeholderAPI) {
             PlaceholderManager.register(new PlaceholderAPISimple());
         }
-        if (economy)
-            PlaceholderManager.register(new EconomySimple(this));
 
         protocolListener = new ProtocolListener(this);
         UUIDSet.set();
@@ -201,6 +209,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
         }
         fullyStarted = false;
 		tablistManager = null;
+		vanillaPlayerListFormatter = null;
 		layoutHandler = null;
 		playerBank = null;
 		offlinePlayerDatabase = null;
@@ -209,14 +218,23 @@ public final class AdvancedPlayerList extends RosaPlugin {
 
     @Override
     public void onDataLoad() {
+        integrationManager = new IntegrationManager(this);
+        integrationManager.enable();
+        selectEconomy();
+
+        if (economy)
+            PlaceholderManager.register(new EconomySimple(this));
+
         fullyStarted = true;
     }
 
     @Override
     public void onConfigReload() {
-        setLocale(configFile.getString("locale"));
+        setLocale(settings.get(Settings.LOCALE));
 		profileManager.reloadSelection();
+        settings.reload();
         applyConfiguration();
+        selectEconomy();
     }
 
 	public void applyActiveProfileConfiguration() {
@@ -226,11 +244,13 @@ public final class AdvancedPlayerList extends RosaPlugin {
     private void applyConfiguration() {
         this.tablistManager.setTablistEnabled(false);
         PlaceholderManager.clearMissingPlaceholders();
-        Ticker.setPeriodTicks(this.configFile.getInt("task-interval", 20));
+
+        Ticker.setPeriodTicks(settings.get(Settings.TASK_INTERVAL));
         bridgeClient.configure(
-                this.configFile.getBoolean("bridge.enabled", false),
-                this.configFile.getInt("bridge.update-interval", 40));
-        SkinToolkit.getDefaultToolkit().setMineSkinApiKey(this.configFile.getString("skin.mineskin-api-key", ""));
+                settings.get(Settings.BRIDGE_ENABLED),
+                settings.get(Settings.BRIDGE_UPDATE));
+
+        SkinToolkit.getDefaultToolkit().setMineSkinApiKey(settings.get(Settings.MINESKIN_API_KEY));
         loadOfflinePlayerSettings();
         loadFakePlayerDefaults(this.configFile.getConfigurationSection("fake-player.default-placeholder"));
 
@@ -242,10 +262,14 @@ public final class AdvancedPlayerList extends RosaPlugin {
         ComplexParser.parseAndRegister(rootSection(profileManager.getActiveHandler()));
         registerCustomPlaceholders(this.configFile.getConfigurationSection("custom-placeholders"));
 
-        loadGlobalLayout(rootSection(profileManager.getActiveGlobal()));
+        ConfigurationSection activeGlobal = rootSection(profileManager.getActiveGlobal());
+        loadGlobalLayout(activeGlobal);
+        if (vanillaPlayerListFormatter != null) {
+            vanillaPlayerListFormatter.configure(activeGlobal.getConfigurationSection("player-list"));
+        }
         loadWorldLayouts();
 
-        tablistManager.setTablistEnabled(this.configFile.getBoolean("tablist-enabled"));
+        tablistManager.setTablistEnabled(settings.get(Settings.TABLIST_ENABLED));
     }
 
     private void checkDependencies() {
@@ -282,7 +306,7 @@ public final class AdvancedPlayerList extends RosaPlugin {
             return;
 
         try {
-            offlinePlayerDatabase.setMaxTimePurging(getConfigFile().getString("offline-players.purgetime"));
+            offlinePlayerDatabase.setMaxTimePurging(settings.get(Settings.OFFLINE_PLAYERS_PURGETIME));
         } catch (RuntimeException exception) {
             Diagnostics.record("Offline player purge time", exception);
             getRosaLogger().log(Level.WARNING, "Invalid offline player purge time; using the previous value", exception);
@@ -408,6 +432,27 @@ public final class AdvancedPlayerList extends RosaPlugin {
             throw new IllegalStateException(config.getPath() + " does not contain a valid YAML root");
         }
         return root;
+    }
+
+    private void selectEconomy() {
+        EconomyManager economy = getHookManager().getEconomy();
+        String preferred = settings.get(Settings.ECONOMY);
+
+        if (preferred.equalsIgnoreCase("auto")) {
+            economy.clearPreferredHook();
+        } else if (!economy.setPreferredHook(preferred)) {
+            getRosaLogger().warning("Configured economy '" + preferred
+                    + "' is unavailable. Available providers: " + economy.getAvailableNames());
+            economy.clearPreferredHook();
+        }
+
+        String active = economy.getActiveName();
+        if (active == null) {
+            getRosaLogger().warning("No supported economy is available.");
+        } else {
+            getDebug().debug("Selected economy: " + active);
+        }
+        AdvancedPlayerList.economy = getHookManager().getEconomy().getActiveHook().isPresent();
     }
 
     private void loadSkinCache() {

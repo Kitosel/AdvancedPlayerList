@@ -1,6 +1,7 @@
 package pl.kiosel.playerlist.model;
 
 import pl.kiosel.playerlist.AdvancedPlayerList;
+import pl.kiosel.playerlist.config.Settings;
 import pl.kiosel.playerlist.placeholder.PlaceholderManager;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public final class Diagnostics {
             if (minimum < 0 || maximum < 1 || minimum > maximum) {
                 problems.add("Invalid slot-length range: " + minimum + "-" + maximum);
             }
-            if (plugin.getConfigFile().getInt("task-interval") < 1) {
+            if (plugin.getSettings().get(Settings.TASK_INTERVAL) < 1) {
                 problems.add("task-interval must be at least 1");
             }
         }
@@ -53,7 +54,7 @@ public final class Diagnostics {
         if (plugin.getTablistManager() == null) {
             problems.add("Tab-list manager is not initialized");
         } else if (plugin.getConfigFile() != null
-                && plugin.getConfigFile().getBoolean("tablist-enabled")
+                && plugin.getSettings().get(Settings.TABLIST_ENABLED)
                 && !plugin.getTablistManager().isTablistEnabled()) {
             problems.add("Tab list is enabled in config but disabled at runtime");
         }
@@ -69,7 +70,7 @@ public final class Diagnostics {
             problems.add("Proxy bridge is enabled but not connected");
         }
         if (plugin.getConfigFile() != null
-                && plugin.getConfigFile().getBoolean("offline-players.enable")
+                && plugin.getSettings().get(Settings.OFFLINE_PLAYERS_ENABLE)
                 && plugin.getOfflinePlayerDatabase() == null) {
             problems.add("Offline-player storage is not initialized");
         }

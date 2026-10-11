@@ -1,6 +1,7 @@
 package pl.kiosel.playerlist.listener;
 
 import pl.kiosel.playerlist.config.Lang;
+import pl.kiosel.playerlist.config.Settings;
 import pl.kiosel.playerlist.model.Ticker;
 import pl.kiosel.playerlist.tablist.Tablist;
 import org.bukkit.entity.Player;
@@ -26,7 +27,7 @@ public class PlayerListener extends RosaListener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(PlayerJoinEvent event) {
-        List<String> blacklist = plugin.getConfigFile().getStringList("worldBlacklist");
+        List<String> blacklist = plugin.getSettings().get(Settings.WORLD_BLACKLIST);
         Player player = event.getPlayer();
 
         Ticker.delay(player, () -> {
@@ -40,9 +41,8 @@ public class PlayerListener extends RosaListener {
             }
         }, 0L);
 
+        if (!plugin.getSettings().get(Settings.UPDATE_CHECKER)) return;
         Ticker.delay(player, () -> {
-            if (!plugin.getConfigFile().getBoolean("update-checker", true)) return;
-
             String newVersion = plugin.getNewPluginVersion();
             if (newVersion == null || plugin.getDescription().getVersion().equals(newVersion)) return;
 
@@ -55,7 +55,7 @@ public class PlayerListener extends RosaListener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
-        if (plugin.getOfflinePlayerDatabase() != null && plugin.getConfigFile().getBoolean("offline-players.enable")) {
+        if (plugin.getOfflinePlayerDatabase() != null && plugin.getSettings().get(Settings.OFFLINE_PLAYERS_ENABLE)) {
             plugin.getOfflinePlayerDatabase().add(event.getPlayer());
         }
         plugin.getTablistManager().disableTablist(event.getPlayer());
@@ -69,7 +69,7 @@ public class PlayerListener extends RosaListener {
                 plugin.getTablistManager().disableTablist(player);
                 return;
             }
-            List<String> blacklist = plugin.getConfigFile().getStringList("worldBlacklist");
+            List<String> blacklist = plugin.getSettings().get(Settings.WORLD_BLACKLIST);
 
             Tablist tablist = plugin.getTablistManager().getTablist(player);
             if (tablist == null || tablist.getPlugin() == plugin) {

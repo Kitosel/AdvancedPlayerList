@@ -75,6 +75,7 @@ public class ComplexParser {
                         ConfigurationSection groupSection = section.getConfigurationSection(key + ".groups");
                         boolean addNot = section.getBoolean(key + ".addNotListed", true);
                         boolean hideEmpty = section.getBoolean(key + ".hideEmpty");
+
                         List<World> notListed = new ArrayList<>(Bukkit.getWorlds());
                         List<WorldGroup> groups = new ArrayList<>();
 

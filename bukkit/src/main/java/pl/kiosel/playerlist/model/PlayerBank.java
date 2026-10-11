@@ -3,6 +3,7 @@ package pl.kiosel.playerlist.model;
 import org.bukkit.Bukkit;
 import pl.kiosel.playerlist.AdvancedPlayerList;
 import pl.kiosel.playerlist.config.ConfigFile;
+import pl.kiosel.playerlist.config.Settings;
 import pl.kiosel.playerlist.event.FakePlayerCreateEvent;
 import pl.kiosel.playerlist.event.FakePlayerRemoveEvent;
 import pl.kiosel.playerlist.model.skin.SkinToolkit;
@@ -113,7 +114,7 @@ public final class PlayerBank {
         if (plugin.getConfigFile().getBoolean("fake-player.enable")) {
             players.addAll(getFakePlayers());
         }
-        if (plugin.getConfigFile().getBoolean("offline-players.enable")
+        if (plugin.getSettings().get(Settings.OFFLINE_PLAYERS_ENABLE)
                 && plugin.getOfflinePlayerDatabase() != null) {
             players.addAll(plugin.getOfflinePlayerDatabase().getOfflinePlayers());
         }
@@ -125,6 +126,7 @@ public final class PlayerBank {
         fakePlayers.clear();
         pendingSkinLookups.clear();
         unavailableSkinLookups.clear();
+
         int header = data.readInt();
         int format;
         int count;
@@ -167,6 +169,7 @@ public final class PlayerBank {
     public void save(OutputStream output) throws IOException {
         DataOutputStream data = new DataOutputStream(output);
         List<FakePlayer> players = getFakePlayers();
+
         data.writeInt(STORAGE_MAGIC);
         data.writeInt(CURRENT_FORMAT);
         data.writeInt(players.size());

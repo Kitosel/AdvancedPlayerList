@@ -14,6 +14,7 @@ import pl.kiosel.playerlist.placeholder.ComplexPlaceholder;
 import pl.kiosel.playerlist.tablist.TablistLayout;
 import pl.kiosel.playerlist.tablist.TablistLayoutHandler;
 import pl.kiosel.rosacore.method.Grouping;
+import pl.kiosel.rosacore.utils.NumberUtils;
 
 import java.util.List;
 
@@ -64,7 +65,7 @@ public class InternalLayoutHandler extends TablistLayoutHandler {
                 ld.setText(this.replace(viewer, layout.getDefaultDisplay()));
             }
             if (layout.getDefaultPing() != null) {
-                ld.setPing(this.parseInt(this.replace(viewer, layout.getDefaultPing())));
+                ld.setPing(NumberUtils.parseInt(this.replace(viewer, layout.getDefaultPing()), 0));
             }
             if (layout.getDefaultSkin() != null) {
                 ld.setSkin(SkinToolkit.getDefaultToolkit().getSkinPredicate(this.replace(viewer, layout.getDefaultSkin())));
@@ -109,7 +110,7 @@ public class InternalLayoutHandler extends TablistLayoutHandler {
 
                                 text = replaceFirst(text, placeholder, replacement);
                                 data.ifPresent(ExtraData.DATA_PING, ping ->
-                                        ld2.setPing(this.parseInt(this.replace(viewer, ping.toString()))));
+                                        ld2.setPing(NumberUtils.parseInt(this.replace(viewer, ping.toString()), 0)));
                                 data.ifPresent(ExtraData.DATA_SKIN, skin ->
                                         ld2.setSkin(SkinToolkit.getDefaultToolkit().getSkinPredicate(
                                                 this.replace(viewer, skin.toString()))));
@@ -138,14 +139,6 @@ public class InternalLayoutHandler extends TablistLayoutHandler {
         for (int k = 0; k < layout.getSize(); ++k) {
             LineData text2 = layout.getLine(k);
             text2.setText(PlaceholderManager.replace(text2.getText(), data2));
-        }
-    }
-    
-    private int parseInt(String str) {
-        try {
-            return Integer.parseInt(str);
-        } catch (NumberFormatException ex) {
-            return 0;
         }
     }
 
